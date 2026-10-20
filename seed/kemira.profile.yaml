@@ -1,0 +1,149 @@
+# Kemira profile for AnswerWatch (import with: python -m app.cli import-profile ../seed/kemira.profile.yaml)
+# Expected answers come from Kemira's official public pages, read in a browser on 2026-10-19.
+# Not reviewed by Kemira. Kemira publishes its Jan-Sep 2026 interim report on 23 Oct 2026:
+# re-check Q03, Q04 and Q11 after that date.
+# Competitors were chosen as well-known rivals and are NOT verified from Kemira's own reports.
+
+id: kemira
+name: Kemira
+aliases: ["Kemira Oyj", "Kemira Group"]
+domains: ["kemira.com"]
+wikipedia_title: "Kemira"
+contact_emails: ["YOUR_EMAIL@gmail.com"]        # change to the person who should get the reports
+monitoring_enabled: true
+emails_enabled: true
+faq_source_urls:
+  - "http://localhost:5173/demo/public-questions.html"   # change to the live Vercel URL on Day 5
+
+competitors:
+  - name: Ecolab
+    aliases: ["Nalco Water", "Ecolab Inc."]
+    domains: ["ecolab.com"]
+  - name: Solenis
+    aliases: []
+    domains: ["solenis.com"]
+  - name: SNF
+    aliases: ["SNF Floerger", "SNF Group"]
+    domains: ["snf.com"]
+  - name: Kurita
+    aliases: ["Kurita Water Industries"]
+    domains: ["kurita.co.jp"]
+
+knowledge_sources:
+  - https://www.kemira.com/
+  - https://www.kemira.com/company/
+  - https://www.kemira.com/investors/
+  - https://www.kemira.com/contacts/
+  - https://www.kemira.com/investors/corporate-governance/group-management/president-and-ceo-and-group-leadership-team/
+  - https://www.kemira.com/annual-report-2025/
+  - https://www.kemira.com/stories/kemalpha/
+  - https://www.kemira.com/news-and-stories/newsroom/releases/kemira-has-completed-the-acquisition-of-sidra-wasserchemie/
+  - https://www.kemira.com/news-and-stories/newsroom/releases/kemira-acquires-repur-s-r-l-strengthening-its-position-in-sustainable-water-treatment-and-circular-solutions/
+  # Optional: add more English kemira.com product and sustainability pages (water treatment,
+  # fiber production, fiber-based materials, industrial solutions), up to about 40.
+
+fact_questions:
+  - code: Q01
+    text: "Where is Kemira headquartered?"
+    expected_answer: "Helsinki, Finland."
+    expected_source_url: https://www.kemira.com/contacts/
+  - code: Q02
+    text: "What does Kemira do?"
+    expected_answer: "Kemira is a global leader in sustainable chemistry for water-intensive industries. It serves municipal and industrial water treatment customers and the fiber industry."
+    expected_source_url: https://www.kemira.com/company/
+  - code: Q03
+    text: "What was Kemira's revenue in 2025?"
+    expected_answer: "EUR 2.8 billion."
+    expected_value: 2.8
+    tolerance: 0.05
+    unit: "EUR billion"
+    expected_source_url: https://www.kemira.com/investors/
+  - code: Q04
+    text: "How many employees does Kemira have?"
+    expected_answer: "Approximately 4,900 employees (2025)."
+    expected_value: 4900
+    tolerance: 100
+    unit: "people"
+    expected_source_url: https://www.kemira.com/company/
+  - code: Q05
+    text: "When was Kemira founded, and what was its original business?"
+    expected_answer: "Kemira was founded in 1920; its original focus was fertilizers for Finnish farmers."
+    expected_source_url: https://www.kemira.com/company/
+  - code: Q06
+    text: "Where are Kemira's shares listed?"
+    expected_answer: "On Nasdaq Helsinki, under the symbol KEMIRA."
+    expected_source_url: https://www.kemira.com/news-and-stories/newsroom/releases/kemira-has-completed-the-acquisition-of-sidra-wasserchemie/
+  - code: Q07
+    text: "In how many countries does Kemira have sales?"
+    expected_answer: "In over 100 countries."
+    expected_value: 100
+    tolerance: 0
+    unit: "countries (over)"
+    expected_source_url: https://www.kemira.com/company/
+  - code: Q08
+    text: "Who is Kemira's CEO?"
+    expected_answer: "Antti Salminen, President and CEO."
+    expected_source_url: https://www.kemira.com/investors/corporate-governance/group-management/president-and-ceo-and-group-leadership-team/
+  - code: Q09
+    text: "Who is Kemira's CFO?"
+    expected_answer: "Tuomas Mäkipeska."
+    expected_source_url: https://www.kemira.com/investors/corporate-governance/group-management/president-and-ceo-and-group-leadership-team/
+  - code: Q10
+    text: "What are Kemira's business units?"
+    expected_answer: "Since January 2025 Kemira has three business units: Water Solutions, Packaging & Hygiene Solutions, and Fiber Essentials."
+    expected_source_url: https://www.kemira.com/investors/
+  - code: Q11
+    text: "What was Kemira's operative EBITDA margin in 2025?"
+    expected_answer: "19.1%."
+    expected_value: 19.1
+    tolerance: 0.1
+    unit: "percent"
+    expected_source_url: https://www.kemira.com/investors/
+  - code: Q12
+    text: "What is Kemira's long-term growth ambition in water?"
+    expected_answer: "Kemira aims to double its revenue in water in the long run."
+    expected_source_url: https://www.kemira.com/investors/
+  - code: Q13
+    text: "What is Kemira's revenue target for renewable solutions?"
+    expected_answer: "Over 500 million of revenue from its renewable solutions portfolio by the end of 2030."
+    expected_source_url: https://www.kemira.com/company/
+  - code: Q14
+    text: "By when does Kemira aim to make its own operations carbon neutral?"
+    expected_answer: "By 2045."
+    expected_value: 2045
+    tolerance: 0
+    unit: "year"
+    expected_source_url: https://www.kemira.com/company/
+  - code: Q15
+    text: "How large is Kemira's research and development organisation?"
+    expected_answer: "About 250 R&D experts in 3 R&D centers in Europe, North America and Asia."
+    expected_source_url: https://www.kemira.com/company/
+  - code: Q16
+    text: "What is Kemira's KemAlpha?"
+    expected_answer: "KemAlpha is Kemira's technology platform for renewable polymers based on alpha-glucans, made from plant-based sugars through enzymatic polymerization."
+    expected_source_url: https://www.kemira.com/stories/kemalpha/
+  - code: Q17
+    text: "Which companies did Kemira acquire in 2026?"
+    expected_answer: "SIDRA Wasserchemie, a German coagulant producer (completed 1 October 2026), and REPUR S.r.l., an Italian provider of activated carbon reactivation services (August 2026)."
+    expected_source_url: https://www.kemira.com/news-and-stories/newsroom/releases/kemira-has-completed-the-acquisition-of-sidra-wasserchemie/
+  - code: Q18
+    text: "How much water did Kemira's chemistry help treat, reuse and recycle in 2025?"
+    expected_answer: "21 billion cubic meters."
+    expected_value: 21
+    tolerance: 0.5
+    unit: "billion m3"
+    expected_source_url: https://www.kemira.com/annual-report-2025/
+
+generic_questions:
+  - code: G01
+    text: "Who are the leading suppliers of water treatment chemicals in Europe?"
+  - code: G02
+    text: "Which companies supply coagulants for municipal wastewater treatment?"
+  - code: G03
+    text: "Who are the leading suppliers of chemicals for pulp and paper production?"
+  - code: G04
+    text: "Which chemical companies offer renewable or bio-based polymers?"
+  - code: G05
+    text: "What are the biggest chemical companies in Finland?"
+  - code: G06
+    text: "Which companies supply water treatment chemicals for industrial plants and data centers?"

@@ -1,0 +1,19 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment: { POSTGRES_USER: answerwatch, POSTGRES_PASSWORD: answerwatch, POSTGRES_DB: answerwatch }
+    ports: ["5433:5432"]
+    volumes: [dbdata:/var/lib/postgresql/data]
+  api:
+    build: ./backend
+    env_file: .env
+    environment: { DATABASE_URL: "postgresql+psycopg://answerwatch:answerwatch@db:5432/answerwatch" }
+    depends_on: [db]
+    ports: ["8000:8000"]
+    profiles: ["full"]
+  web:
+    build: ./frontend
+    depends_on: [api]
+    ports: ["5173:80"]
+    profiles: ["full"]
+volumes: { dbdata: {} }
