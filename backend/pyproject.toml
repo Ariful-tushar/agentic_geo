@@ -50,6 +50,8 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.per-file-ignores]
 # Alembic revisions are generated; keep them as generated.
 "alembic/versions/*" = ["E501", "I001", "UP007", "UP035"]
+# pytest fixtures imported from a helper module are used as test arguments
+"tests/*" = ["F811"]
 
 [dependency-groups]
 dev = [

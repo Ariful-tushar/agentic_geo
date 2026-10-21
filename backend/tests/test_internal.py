@@ -26,11 +26,21 @@ class FakeRunnable:
 
 
 class FakeModel:
-    def __init__(self, script: list[Any], prompts: list[str]) -> None:
+    def __init__(
+        self,
+        script: list[Any],
+        prompts: list[str],
+        options_log: list[tuple[str, dict]],
+        provider: str,
+    ) -> None:
         self.script, self.prompts = script, prompts
+        self.options_log, self.provider = options_log, provider
 
-    def with_structured_output(self, schema: type, include_raw: bool) -> FakeRunnable:
+    def with_structured_output(
+        self, schema: type, include_raw: bool, **options: Any
+    ) -> FakeRunnable:
         assert include_raw
+        self.options_log.append((self.provider, options))
         return FakeRunnable(self.script, self.prompts)
 
 
@@ -47,10 +57,16 @@ class Factory:
         self.scripts = scripts
         self.prompts: dict[str, list[str]] = {}
         self.used: list[str] = []
+        self.options_log: list[tuple[str, dict]] = []
 
     def __call__(self, provider: str) -> FakeModel:
         self.used.append(provider)
-        return FakeModel(self.scripts[provider], self.prompts.setdefault(provider, []))
+        return FakeModel(
+            self.scripts[provider],
+            self.prompts.setdefault(provider, []),
+            self.options_log,
+            provider,
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -121,3 +137,17 @@ async def test_use_cache_false_skips_the_cache(memory_cache: dict[str, Any]) -> 
 def test_every_spec_role_exists() -> None:
     expected = {"judge", "why", "extract", "summarise", "draft", "rag", "readiness"}
     assert set(internal.ROLES) == expected
+
+
+async def test_groq_uses_json_schema_mode_and_gemini_the_default() -> None:
+    factory = Factory(gemini=[FakeHTTPError(429, {"retry-after": "7200"})], groq=[ok("g")])
+    await structured("judge", "p", Reply, chat_factory=factory)
+    assert factory.options_log == [("gemini", {}), ("groq", {"method": "json_schema"})]
+
+
+async def test_a_400_from_the_provider_is_treated_as_invalid_output_and_retried() -> None:
+    factory = Factory(groq=[FakeHTTPError(400), ok("second try")])
+    result = await structured("rag", "p", Reply, mode="dev", chat_factory=factory)
+    assert result.word == "second try"
+    first, second = factory.prompts["groq"]
+    assert first == "p" and "HTTP 400" in second

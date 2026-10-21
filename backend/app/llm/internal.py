@@ -75,16 +75,25 @@ async def _invoke[T: BaseModel](
     provider: str, role: Role, prompt: str, schema: type[T], factory: ChatFactory
 ) -> T:
     """One provider: ask, validate, and retry once with the validation error appended."""
-    runnable = factory(provider).with_structured_output(schema, include_raw=True)
+    # Groq's gpt-oss sometimes skips the tool call in function-calling mode ("tool_use_failed");
+    # its json_schema mode is documented for this model (console.groq.com/docs/structured-outputs).
+    options = {"method": "json_schema"} if provider == "groq" else {}
+    runnable = factory(provider).with_structured_output(schema, include_raw=True, **options)
     current = prompt
     for _ in range(2):
         started = time.monotonic()
-        result = await call_with_retries(provider, lambda text=current: runnable.ainvoke(text))
-        raw = result.get("raw")
+        raw, parsed = None, None
+        try:
+            result = await call_with_retries(provider, lambda text=current: runnable.ainvoke(text))
+        except Exception as exc:
+            if status_of(exc) != 400:  # a 400 means the model's output was rejected: ask again
+                raise
+            problem = f"{type(exc).__name__}: {str(exc)[:200]}"
+        else:
+            raw, parsed = result.get("raw"), result.get("parsed")
+            error = result.get("parsing_error")
+            problem = repr(error) if error else ("empty output" if parsed is None else None)
         usage = getattr(raw, "usage_metadata", None) or {}
-        error = result.get("parsing_error")
-        parsed = result.get("parsed")
-        problem = repr(error) if error else ("empty output" if parsed is None else None)
         await log_call(
             role=role,
             provider=provider,

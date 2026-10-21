@@ -24,9 +24,14 @@ class Settings(BaseSettings):
 
     gemini_max_concurrency: int = 2
     groq_max_concurrency: int = 1
+    # a 429 with a longer wait than this (or a used-up daily quota) stops the provider for the run
+    groq_daily_stop_seconds: int = 900
+    gemini_daily_stop_seconds: int = 900
     page_cache_days: int = 7
 
     fetch_user_agent: str = "AnswerWatchBot/0.1 (+your-email)"
+    # contact (email or URL) for the Wikipedia User-Agent; falls back to FETCH_USER_AGENT
+    wikipedia_contact: str = ""
 
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 465
@@ -41,6 +46,7 @@ class Settings(BaseSettings):
 
     job_runner: str = "local"
     github_repo: str = "your-user/answerwatch"
+    github_ref: str = "main"
     github_dispatch_token: str = ""
 
     @field_validator("database_url", mode="before")

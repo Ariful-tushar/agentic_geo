@@ -53,6 +53,12 @@ def db(test_db_url: str) -> Iterator[DbCall]:
     async def reset(create: bool) -> None:
         engine = create_async_engine(test_db_url, poolclass=NullPool)
         async with engine.begin() as conn:
+            if create:
+                await conn.exec_driver_sql("CREATE EXTENSION IF NOT EXISTS vector")
+            else:  # tables made by langchain-postgres (RAG chunks)
+                await conn.exec_driver_sql(
+                    "DROP TABLE IF EXISTS langchain_pg_embedding, langchain_pg_collection CASCADE"
+                )
             await conn.run_sync(Base.metadata.create_all if create else Base.metadata.drop_all)
         await engine.dispose()
 

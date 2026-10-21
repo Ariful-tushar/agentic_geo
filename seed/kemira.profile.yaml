@@ -9,7 +9,7 @@ name: Kemira
 aliases: ["Kemira Oyj", "Kemira Group"]
 domains: ["kemira.com"]
 wikipedia_title: "Kemira"
-contact_emails: ["YOUR_EMAIL@gmail.com"]        # change to the person who should get the reports
+contact_emails: ["me.artu07@gmail.com"]        # change to the person who should get the reports
 monitoring_enabled: true
 emails_enabled: true
 faq_source_urls:

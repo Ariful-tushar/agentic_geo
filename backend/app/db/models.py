@@ -54,9 +54,7 @@ def _answer_fk(unique: bool = False) -> Mapped[uuid.UUID]:
 
 class Company(Base):
     __tablename__ = "companies"
-    __table_args__ = (
-        _in("onboarding_status", ("pending", "building", "ready", "failed")),
-    )
+    __table_args__ = (_in("onboarding_status", ("pending", "building", "ready", "failed")),)
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str] = mapped_column(Text)
@@ -142,8 +140,9 @@ class Page(Base):
 class Run(Base):
     __tablename__ = "runs"
     __table_args__ = (
-        UniqueConstraint("company_id", "kind", "run_date"),
+        UniqueConstraint("company_id", "kind", "run_date", "mode"),
         _in("kind", ("ax", "competitor", "faq", "daily", "onboard")),
+        _in("mode", ("dev", "live")),
         _in("trigger", ("schedule", "manual")),
         _in("status", ("running", "completed", "partial", "failed", "skipped")),
     )
@@ -152,6 +151,8 @@ class Run(Base):
     company_id: Mapped[str] = _company_fk()
     kind: Mapped[str] = mapped_column(Text)
     run_date: Mapped[date] = mapped_column(Date)
+    # `dev` runs (small sample, trial) never mix with `live` runs of the same day.
+    mode: Mapped[str] = mapped_column(Text, default="live", server_default="live")
     trigger: Mapped[str] = mapped_column(Text, default="manual")
     status: Mapped[str] = mapped_column(Text, default="running")
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -218,13 +219,18 @@ class Score(Base):
 
 class DailyAccuracy(Base):
     __tablename__ = "daily_accuracy"
-    __table_args__ = (UniqueConstraint("company_id", "run_date", "engine"),)
+    __table_args__ = (
+        UniqueConstraint("company_id", "run_date", "engine", "mode"),
+        _in("mode", ("dev", "live")),
+    )
 
     id: Mapped[uuid.UUID] = _id()
     company_id: Mapped[str] = _company_fk()
     run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), index=True)
     run_date: Mapped[date] = mapped_column(Date)
     engine: Mapped[str] = mapped_column(Text)
+    # Copied from the run. The API, trend, alerts and emails read `live` rows only.
+    mode: Mapped[str] = mapped_column(Text, default="live", server_default="live")
     accuracy: Mapped[Decimal] = mapped_column(Numeric)
     n_questions: Mapped[int] = mapped_column(Integer)
     n_correct: Mapped[int] = mapped_column(Integer, default=0)

@@ -1,4 +1,9 @@
-"""Per-provider concurrency, retries with backoff, and daily-stop detection (SPEC 7.3)."""
+"""Per-provider concurrency, retries with backoff, and daily-stop detection (SPEC 7.3).
+
+A 429 is a daily stop only when the daily quota is used up (Groq: `x-ratelimit-remaining-requests`
+is 0, or the error names a per-day limit such as TPD/RPD/PerDay) or when the wait is longer than
+`*_DAILY_STOP_SECONDS` (default 900). Shorter waits are slept and the run goes on.
+"""
 
 import asyncio
 import re
@@ -9,7 +14,8 @@ from typing import Any
 
 from app.config import get_settings
 
-DAILY_STOP_SECONDS = 60
+DEFAULT_DAILY_STOP_SECONDS = 900
+_DAILY_LIMIT_TEXT = re.compile(r"(?:tpd|rpd)|per[ _-]?day", re.IGNORECASE)
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 _MAX_ATTEMPTS = 4
 _BASE_DELAY = 2.0
@@ -84,12 +90,32 @@ def status_of(exc: BaseException) -> int | None:
     return None
 
 
-def retry_after_of(exc: BaseException) -> float | None:
-    """Seconds to wait, from `retry-after` / Groq reset headers or Gemini's retryDelay."""
+def daily_stop_seconds(provider: str) -> float:
+    """Waits longer than this are treated as "out of quota for today"."""
+    settings = get_settings()
+    return {
+        "groq": settings.groq_daily_stop_seconds,
+        "gemini": settings.gemini_daily_stop_seconds,
+    }.get(provider, DEFAULT_DAILY_STOP_SECONDS)
+
+
+def is_daily_limit(exc: BaseException) -> bool:
+    """True when the provider says the daily quota is used up, however short its retry-after."""
     response: Any = getattr(exc, "response", None)
     headers = getattr(response, "headers", None)
     if headers is not None:
-        for name in ("retry-after", "x-ratelimit-reset-requests"):
+        left = str(headers.get("x-ratelimit-remaining-requests", "")).strip()
+        if left == "0":  # Groq: the daily request quota (RPD) is used up
+            return True
+    return bool(_DAILY_LIMIT_TEXT.search(str(exc)))
+
+
+def retry_after_of(exc: BaseException) -> float | None:
+    """Seconds to wait, from `retry-after` / Groq's token reset header or Gemini's retryDelay."""
+    response: Any = getattr(exc, "response", None)
+    headers = getattr(response, "headers", None)
+    if headers is not None:
+        for name in ("retry-after", "x-ratelimit-reset-tokens"):
             seconds = parse_duration(headers.get(name))
             if seconds is not None:
                 return seconds
@@ -130,7 +156,7 @@ def record_tokens(provider: str, tokens: int) -> None:
 async def call_with_retries[T](
     provider: str, fn: Callable[[], Awaitable[T]], sleep: Sleep = asyncio.sleep
 ) -> T:
-    """Run `fn` under the provider's semaphore; retry 429/5xx; raise DailyStop on long waits."""
+    """Run `fn` under the provider's semaphore; retry 429/5xx; DailyStop when out for the day."""
     for attempt in range(1, _MAX_ATTEMPTS + 1):
         if is_exhausted(provider):
             raise DailyStop(provider)
@@ -141,7 +167,7 @@ async def call_with_retries[T](
             if not _is_retryable(exc):
                 raise
             wait = retry_after_of(exc)
-            if wait is not None and wait > DAILY_STOP_SECONDS:
+            if is_daily_limit(exc) or (wait is not None and wait > daily_stop_seconds(provider)):
                 _exhausted.add(provider)
                 raise DailyStop(provider, wait) from exc
             if attempt == _MAX_ATTEMPTS:

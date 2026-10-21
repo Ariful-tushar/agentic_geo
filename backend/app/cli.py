@@ -5,7 +5,10 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from app.agents.daily import daily_command
 from app.db.session import get_engine, get_sessionmaker
+from app.emails.commands import run_email_command
+from app.jobs.registry import JOBS, onboard_command, run_ax_command
 from app.loop import run
 from app.profiles.loader import ProfileError, import_profile, load_profile_file
 
@@ -87,6 +90,65 @@ def cmd_fetch(args: argparse.Namespace) -> int:
     return run(_fetch(args.url, args.force))
 
 
+def cmd_onboard(args: argparse.Namespace) -> int:
+    return run(onboard_command(args.company, args.trigger))
+
+
+async def _rag_ask(company_id: str, question: str, mode: str) -> int:
+    from app.kb.retriever import KnowledgeBaseEmpty, rag_answer
+
+    try:
+        result = await rag_answer(get_engine(), company_id, question, mode=mode)  # type: ignore[arg-type]
+    except KnowledgeBaseEmpty as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        await get_engine().dispose()
+    print(f"Answer: {result.answer}")
+    for quote in result.quotes:
+        print(f'  quote: "{quote.text}"')
+        print(f"         {quote.url}")
+    if result.source_urls:
+        print("Sources: " + ", ".join(result.source_urls))
+    return 0
+
+
+def cmd_rag_ask(args: argparse.Namespace) -> int:
+    return run(_rag_ask(args.company, args.question, args.mode))
+
+
+def cmd_run_ax(args: argparse.Namespace) -> int:
+    return run(run_ax_command(args.company, args.mode, args.trigger))
+
+
+def cmd_send_report(args: argparse.Namespace) -> int:
+    return run(run_email_command("report", args.company, args.mode, args.force))
+
+
+def cmd_send_alerts(args: argparse.Namespace) -> int:
+    return run(run_email_command("alerts", args.company, args.mode, False))
+
+
+def cmd_send_test_email(args: argparse.Namespace) -> int:
+    return run(run_email_command("test", args.company, "live", False))
+
+
+def cmd_daily(args: argparse.Namespace) -> int:
+    return run(daily_command(args.company, args.trigger, args.mode, args.force))
+
+
+def cmd_job(args: argparse.Namespace) -> int:
+    job = JOBS[args.name]
+    if not job.available:
+        print(f"Job '{args.name}' is not available yet.", file=sys.stderr)
+        return 2
+    if job.needs_company and not args.company:
+        print(f"Job '{args.name}' needs --company.", file=sys.stderr)
+        return 2
+    assert job.handler is not None
+    return run(job.handler(args.company, args.trigger, args.mode))
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="app.cli", description="AnswerWatch commands")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -103,6 +165,52 @@ def build_parser() -> argparse.ArgumentParser:
     fetch.add_argument("url")
     fetch.add_argument("--force", action="store_true", help="ignore the page cache")
     fetch.set_defaults(func=cmd_fetch)
+
+    onboard = sub.add_parser("onboard", help="build the knowledge base (RAG) of a company")
+    onboard.add_argument("--company", required=True)
+    onboard.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
+    onboard.set_defaults(func=cmd_onboard)
+
+    rag = sub.add_parser("rag-ask", help="answer one question from the company's own pages")
+    rag.add_argument("--company", required=True)
+    rag.add_argument("--mode", choices=["live", "dev"], default="live")
+    rag.add_argument("question")
+    rag.set_defaults(func=cmd_rag_ask)
+
+    ax = sub.add_parser("run-ax", help="run Ax for today (resumable)")
+    ax.add_argument("--company", required=True)
+    ax.add_argument("--mode", choices=["live", "dev"], default="live")
+    ax.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
+    ax.set_defaults(func=cmd_run_ax)
+
+    job = sub.add_parser("job", help="run a job by name (used by the API and GitHub Actions)")
+    job.add_argument("name", choices=sorted(JOBS))
+    job.add_argument("--company", default=None)
+    job.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
+    job.add_argument("--mode", choices=["live", "dev"], default="live")
+    job.set_defaults(func=cmd_job)
+
+    report = sub.add_parser("send-report", help="send the daily report email")
+    report.add_argument("--company", required=True)
+    report.add_argument("--mode", choices=["live", "dev"], default="live")
+    report.add_argument("--force", action="store_true", help="send even if already sent today")
+    report.set_defaults(func=cmd_send_report)
+
+    alerts = sub.add_parser("send-alerts", help="email the new warning alerts (once each)")
+    alerts.add_argument("--company", required=True)
+    alerts.add_argument("--mode", choices=["live", "dev"], default="live")
+    alerts.set_defaults(func=cmd_send_alerts)
+
+    test = sub.add_parser("send-test-email", help="send a test email to the contact emails")
+    test.add_argument("--company", required=True)
+    test.set_defaults(func=cmd_send_test_email)
+
+    daily = sub.add_parser("daily", help="Ax, competitor, FAQ, alert email, daily report")
+    daily.add_argument("--company", default=None, help="default: every company with monitoring on")
+    daily.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
+    daily.add_argument("--mode", choices=["live", "dev"], default="live")
+    daily.add_argument("--force", action="store_true", help="resend today's report")
+    daily.set_defaults(func=cmd_daily)
 
     ping = sub.add_parser("ping", help="test every engine, internal role and the embeddings")
     ping.add_argument("--save-fixture", action="store_true", help="save raw responses")

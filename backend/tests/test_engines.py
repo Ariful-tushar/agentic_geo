@@ -76,9 +76,7 @@ def make_engine(text: str = "answer") -> tuple[Engine, list[str]]:
         asked.append(question)
         return EngineAnswer(text=text, model=model)
 
-    config = EngineConfig(
-        id="e", provider="gemini", model_env="gemini_probe_model", label="test"
-    )
+    config = EngineConfig(id="e", provider="gemini", model_env="gemini_probe_model", label="test")
     return Engine(config, asker), asked
 
 
