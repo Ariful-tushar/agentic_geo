@@ -1,0 +1,30 @@
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "The CEO is Antti Salminen 【2†L6-L10】. See https://www.kemira.com/company/leadership/, and also (https://example.com/news).",
+        "executed_tools": [
+          {
+            "index": 0,
+            "type": "search",
+            "arguments": "{\"query\": \"Kemira CEO\"}",
+            "search_results": {
+              "results": [
+                {"title": "Leadership", "url": "https://www.kemira.com/company/leadership/"},
+                {"title": "News", "url": "https://news.example.org/kemira-ceo"}
+              ]
+            }
+          },
+          {
+            "index": 1,
+            "type": "browser.open",
+            "arguments": "{}",
+            "browser_results": [{"title": "Kemira", "url": "https://www.kemira.com/"}]
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {"prompt_tokens": 120, "completion_tokens": 45}
+}

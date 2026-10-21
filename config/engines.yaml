@@ -1,0 +1,19 @@
+engines:
+  - id: groq_web
+    provider: groq
+    model_env: GROQ_PROBE_MODEL
+    web_search: true          # tools=[{"type":"browser_search"}], reasoning_effort "low"
+    enabled: true
+    label: "Open GPT model on Groq, with web search"
+  - id: gemini_memory
+    provider: gemini
+    model_env: GEMINI_PROBE_MODEL
+    web_search: false         # Google Search grounding is not on Gemini's free tier
+    enabled: true
+    label: "Gemini, model memory only"
+  - id: openrouter_memory
+    provider: openrouter
+    model_env: OPENROUTER_MEMORY_MODEL
+    web_search: false
+    enabled: false            # optional; free models are limited to 50 requests/day
+    label: "Free OpenRouter model, memory only"

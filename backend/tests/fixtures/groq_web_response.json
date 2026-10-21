@@ -1,0 +1,140 @@
+{
+  "id": "chatcmpl-3d196d01-4b2a-49de-abd5-6aba441d4209",
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "content": "The current President and Chief Executive Officer of Kemira – the Finnish water‑chemicals specialist – is **Antti Salminen**【1†L6-L8】【1†L50-L51】.",
+        "role": "assistant",
+        "annotations": null,
+        "executed_tools": [
+          {
+            "arguments": "{\"query\": \"Kemira CEO\", \"topn\": 10, \"source\": \"news\"}",
+            "index": 0,
+            "type": "browser_search",
+            "browser_results": null,
+            "code_results": null,
+            "output": "L0: \nL1: URL: https://exa.ai/search?q=Kemira+CEO\nL2: # Search Results\nL3: \nL4: \\\\* 【0†President and CEO and Group Leadership Team -\nL5: Kemira†www.kemira.com】\nL6: \\\\* 【1†Kemira's new President & CEO Antti Salminen starts -\nL7: Kemira†www.kemira.com】\nL8: \\\\* 【2†Antti Salminen†linkedin.com】\nL9: \\\\* 【3†Management shareholding - Kemira†www.kemira.com】\nL10: \\\\* 【4†Kemira†en.wikipedia.org】\nL11: \\\\* 【5†Group management†www.kemira.com】\nL12: \\\\* 【6†Kemira full Annual Report 2025†www.kemira.com】\nL13: \\\\* 【7†CEO’s Review†www.kemira.com】\nL14: \\\\* 【8†Q1 2026 Kemira Oyj Earnings Call on April 24, 2026 /\nL15: 7:30AM†www.kemira.com】\nL16: \\\\* 【9†Kemira Oyj (HEL:KEMIRA) Company Profile &\nL17: Description†stockanalysis.com】",
+            "search_results": {
+              "images": null,
+              "results": [
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "President and CEO and Group Leadership Team - Kemira",
+                  "url": "https://www.kemira.com/investors/corporate-governance/group-management/president-and-ceo-and-group-leadership-team/"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "Kemira's new President & CEO Antti Salminen starts - Kemira",
+                  "url": "https://www.kemira.com/news-and-stories/newsroom/news/kemiras-new-president-ceo-antti-salminen-starts/"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "Antti Salminen",
+                  "url": "https://linkedin.com/in/antti-salminen-02b95b2ab"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "Management shareholding - Kemira",
+                  "url": "https://www.kemira.com/investors/shareholders/management-shareholding/"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "Kemira",
+                  "url": "https://en.wikipedia.org/wiki/Kemira"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "Group management",
+                  "url": "https://www.kemira.com/investors/corporate-governance/group-management/"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "Kemira full Annual Report 2025",
+                  "url": "https://www.kemira.com/app/uploads/2026/02/kemira-full-annual-report-2025.pdf"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "CEO’s Review",
+                  "url": "https://www.kemira.com/app/uploads/2026/03/kemira_agm-2026_ceo-review.pdf"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "Q1 2026 Kemira Oyj Earnings Call on April 24, 2026 / 7:30AM",
+                  "url": "https://www.kemira.com/app/uploads/2026/04/kemira-q1-2026-webcast-transcript.pdf"
+                },
+                {
+                  "content": "",
+                  "score": 0.0,
+                  "title": "Kemira Oyj (HEL:KEMIRA) Company Profile & Description",
+                  "url": "https://stockanalysis.com/quote/hel/KEMIRA/company/"
+                }
+              ]
+            },
+            "name": "browser.search"
+          },
+          {
+            "arguments": "{\"cursor\": 0, \"id\": 4}",
+            "index": 1,
+            "type": "browser.open",
+            "browser_results": null,
+            "code_results": null,
+            "output": "L0: \nL1: URL: https://en.wikipedia.org/wiki/Kemira\nL2: Kemira\nL3: \nL4: Kemira Oyj Kemira Headquarters is located in Salmisaari, Helsinki Type Julkinen\nL5: osakeyhtiöTraded as Nasdaq Helsinki: KEMIRA Industry Chemicals Founded 1920; 106\nL6: years ago Headquarters Helsinki, Finland Key people Matti Kähkönen (Chairman)\nL7: Antti Salminen (President and CEO) Petri Castrén (CFO)Products Chemicals for\nL8: fibre treatment, water treatment and separation Revenue €2.948 billion (2024)\nL9: \\[1\\]Operating income €399 million (2024) \\[1\\]Net income €199 million\nL10: (2023)Total assets €3.489 billion (2023)Total equity €1.684 billion\nL11: (2023)Number of employees 4,746 (end 2024) \\[1\\]Website www.kemira.com\nL12: **Footnotes**\nL13: \nL14: \\[2\\]\\[3\\]\nL15: \nL16: **Kemira Oyj** (Nasdaq Helsinki: KEMIRA) is a chemical industry group\nL17: headquartered in Helsinki, Finland. The company was established in 1920 and\nL18: operates in three business areas: Water Solutions, Packaging & Hygiene Solutions,\nL19: and Fiber Essentials. \\[4\\]\nL20: \nL21: ## History\nL22: \nL23: Kemira’s history begins with the State Sulphuric Acid and Superphosphate\nL24: Plants, founded in 1920. When it became known in Finland that machinery for a\nL25: sulphuric acid plant was for sale in Germany, the plant was purchased and a\nL26: company (Kemira) was established around it. \\[5\\]\nL27: \nL28: The company supplied chemicals needed to supply the Finnish industrial, mining,\nL29: and fertilizer production sectors. \\[6\\]\nL30: \nL31: In 1971, Typpi Oy — active in nitrogen industry in Oulu since 1952 — was\nL32: merged into the company, and Rikkihappo Oy became Kemira Oy. \\[7\\]\nL33: \nL34: Kemira Oyj was listed on the Nasdaq Helsinki in 1994. \\[8\\]\nL35: \nL36: In 2008, the company decided to focus on water chemistry. \\[9\\]\nL37: \nL38: After Russia’s invasion of Ukraine, Kemira announced in March 2022 that it\nL39: would suspend deliveries to Russia and Belarus. In May, the company stated it\nL40: would exit the markets entirely. \\[10\\]\nL41: \nL42: In February 2024, the company’s oil and gas business was sold in the United\nL43: States to Sterling Specialty Chemicals LLC. \\[11\\]\nL44: \nL45: ## Organization\nL46: \nL47: The company's headquarters is located in Salmisaari, Helsinki, \\[12\\] and its\nL48: research centers are in Espoo, Shanghai, and Atlanta. \\[13\\]\nL49: \nL50: Antti Salminen became Kemira's President and CEO in February 2024. \\[14\\]\nL51: \nL52: Kemira's main shareholder is Oras Invest Oy and its owners, members of the\nL53: Paasikivi family. Its former main owner, the State of Finland through Solidium,\nL54: sold the largest part of its holding to Finnish investors in August 2007 and\nL55: divested its remaining shares in 2023-2024. In 2024, Oras Invest holds 23% of\nL56: Kemira's shares. \\[ _citation needed_\\]\nL57: \nL58: Kemira has three business areas: water treatment, fiber products, and packaging\nL59: and hygiene. \\[15\\] The related business units are Water Solutions, Packaging &\nL60: Hygiene Solutions, and Fiber Essentials. \\[4\\]\nL61: \nL62: ## References\nL63: \nL64: 01. 1 2 3 Kauppalehti (2025-12-18). \"Kemira Oyj \\| Yritys- ja taloustiedot\".\nL65: _Tärkeimmät talousuutiset \\| Kauppalehti_ (in Finnish). Retrieved 2025-12-18.\nL66: \nL67: 02. ↑ Kemira Oyj. \"Annual Report 2023\" (PDF). Retrieved 13 June 2025.\nL68: \nL69: 03. ↑ NASDAQ. \"Kermia Oyj (KERMIA) Summary\". Retrieved 13 June 2025.\nL70: \nL71: 04. 1 2 Jurvelin, Kyösti (2024-08-16). \"Kemira menee isoon remonttiin –\nL72: Johtoryhmä ja toimintamalli uusiksi\". _Talouselämä_ (in Finnish). Retrieved\nL73: 2025-12-18.\nL74: \nL75: 05. ↑\"Vuorineuvos Wäinö Tammenoksa (1870–1943)\". _kansallisbiografia.fi_.\nL76: Retrieved 2025-12-18.\nL77: \nL78: 06. ↑\"Suomi oli suojavarustebisneksessä Euroopan huipulla – näin kannattava\nL79: yritys myytiin, Vaasan tehdas suljettiin ja tuotanto siirrettiin ulkomaille\".\nL80: _www.iltalehti.fi_ (in Finnish). Retrieved 2025-12-18.\nL81: \nL82: 07. ↑\nL83: \nL84: Leppänen, Timo (2016). _Merkilliset nimet: tarinoita yritystenja tuotteiden\nL85: nimistä_. Kirjokansi. Helsinki: Suomalaisen kirjallisuuden seura. ISBN\nL86: \nL87: 978-952-222-720-1\nL88: \nL89: .\nL90: \nL91: 08. ↑ käyttäjäprofiili, Latomon (1994-11-11). \"Kemiran noteeraus alkoi\".\nL92: _Helsingin Sanomat_ (in Finnish). Retrieved 2025-12-18.\nL93: \nL94: 09. ↑ Hulkko, Kustaa (2010-07-26). \"Kemiran vanhat synnit ja uusi ura: Yritys\nL95: veden varassa\". _Suomenkuvalehti.fi_ (in Finnish). Retrieved 2025-12-18.\nL96: \nL97: 10. ↑\"Yritykset \\| Kemira lähtee Venäjältä kokonaan\". _Helsingin Sanomat_\nL98: (in Finnish). 2022-05-06. Retrieved 2025-12-18.\nL99: \nL100: 11. ↑ Boxberg, Katja (2024-05-17). \"Hän on Kemiran uusi toimitusjohtaja:\nL101: Johtaa nyt yhtiötä, joka on kovassa tuloskunnossa ja kurssi nousussa\".\nL102: _Talouselämä_ (in Finnish). Retrieved 2025-12-18.\nL103: \nL104: 12. ↑\"Contacts\". _Kemira_. Retrieved 2025-12-18.\nL105: \nL106: 13. ↑ Mustonen, Antti (2017-10-25). \"Kemira petrasi - tehostusohjelma etenee\".\nL107: _Arvopaperi_ (in Finnish). Retrieved 2025-12-18.\nL108: \nL109: 14. ↑\"Nimitykset \\| Kemira valitsi Antti Salmisen uudeksi\nL110: toimitusjohtajakseen\". _Helsingin Sanomat_ (in Finnish). 2023-12-19. Retrieved\nL111: 2025-12-18.\nL112: \nL113: 15. ↑ Nenonen, Rosamari (2024-10-18). \"Tylsäksi mielletyn Kemiran osake nousi\nL114: parissa vuodessa 90 prosenttia: Tältä yhtiö näyttää nyt\". _Talouselämä_\nL115: (in Finnish). Retrieved 2025-12-18.",
+            "search_results": {
+              "images": null,
+              "results": [
+                {
+                  "content": "L0: \nL1: URL: https://en.wikipedia.org/wiki/Kemira\nL2: Kemira\nL3: \nL4: Kemira Oyj Kemira Headquarters is located in Salmisaari, Helsinki Type Julkinen\nL5: osakeyhtiöTraded as Nasdaq Helsinki: KEMIRA Industry Chemicals Founded 1920; 106\nL6: years ago Headquarters Helsinki, Finland Key people Matti Kähkönen (Chairman)\nL7: Antti Salminen (President and CEO) Petri Castrén (CFO)Products Chemicals for\nL8: fibre treatment, water treatment and separation Revenue €2.948 billion (2024)\nL9: \\[1\\]Operating income €399 million (2024) \\[1\\]Net income €199 million\nL10: (2023)Total assets €3.489 billion (2023)Total equity €1.684 billion\nL11: (2023)Number of employees 4,746 (end 2024) \\[1\\]Website www.kemira.com\nL12: **Footnotes**\nL13: \nL14: \\[2\\]\\[3\\]\nL15: \nL16: **Kemira Oyj** (Nasdaq Helsinki: KEMIRA) is a chemical industry group\nL17: headquartered in Helsinki, Finland. The company was established in 1920 and\nL18: operates in three business areas: Water Solutions, Packaging & Hygiene Solutions,\nL19: and Fiber Essentials. \\[4\\]\nL20: \nL21: ## History\nL22: \nL23: Kemira’s history begins with the State Sulphuric Acid and Superphosphate\nL24: Plants, founded in 1920. When it became known in Finland that machinery for a\nL25: sulphuric acid plant was for sale in Germany, the plant was purchased and a\nL26: company (Kemira) was established around it. \\[5\\]\nL27: \nL28: The company supplied chemicals needed to supply the Finnish industrial, mining,\nL29: and fertilizer production sectors. \\[6\\]\nL30: \nL31: In 1971, Typpi Oy — active in nitrogen industry in Oulu since 1952 — was\nL32: merged into the company, and Rikkihappo Oy became Kemira Oy. \\[7\\]\nL33: \nL34: Kemira Oyj was listed on the Nasdaq Helsinki in 1994. \\[8\\]\nL35: \nL36: In 2008, the company decided to focus on water chemistry. \\[9\\]\nL37: \nL38: After Russia’s invasion of Ukraine, Kemira announced in March 2022 that it\nL39: would suspend deliveries to Russia and Belarus. In May, the company stated it\nL40: would exit the markets entirely. \\[10\\]\nL41: \nL42: In February 2024, the company’s oil and gas business was sold in the United\nL43: States to Sterling Specialty Chemicals LLC. \\[11\\]\nL44: \nL45: ## Organization\nL46: \nL47: The company's headquarters is located in Salmisaari, Helsinki, \\[12\\] and its\nL48: research centers are in Espoo, Shanghai, and Atlanta. \\[13\\]\nL49: \nL50: Antti Salminen became Kemira's President and CEO in February 2024. \\[14\\]\nL51: \nL52: Kemira's main shareholder is Oras Invest Oy and its owners, members of the\nL53: Paasikivi family. Its former main owner, the State of Finland through Solidium,\nL54: sold the largest part of its holding to Finnish investors in August 2007 and\nL55: divested its remaining shares in 2023-2024. In 2024, Oras Invest holds 23% of\nL56: Kemira's shares. \\[ _citation needed_\\]\nL57: \nL58: Kemira has three business areas: water treatment, fiber products, and packaging\nL59: and hygiene. \\[15\\] The related business units are Water Solutions, Packaging &\nL60: Hygiene Solutions, and Fiber Essentials. \\[4\\]\nL61: \nL62: ## References\nL63: \nL64: 01. 1 2 3 Kauppalehti (2025-12-18). \"Kemira Oyj \\| Yritys- ja taloustiedot\".\nL65: _Tärkeimmät talousuutiset \\| Kauppalehti_ (in Finnish). Retrieved 2025-12-18.\nL66: \nL67: 02. ↑ Kemira Oyj. \"Annual Report 2023\" (PDF). Retrieved 13 June 2025.\nL68: \nL69: 03. ↑ NASDAQ. \"Kermia Oyj (KERMIA) Summary\". Retrieved 13 June 2025.\nL70: \nL71: 04. 1 2 Jurvelin, Kyösti (2024-08-16). \"Kemira menee isoon remonttiin –\nL72: Johtoryhmä ja toimintamalli uusiksi\". _Talouselämä_ (in Finnish). Retrieved\nL73: 2025-12-18.\nL74: \nL75: 05. ↑\"Vuorineuvos Wäinö Tammenoksa (1870–1943)\". _kansallisbiografia.fi_.\nL76: Retrieved 2025-12-18.\nL77: \nL78: 06. ↑\"Suomi oli suojavarustebisneksessä Euroopan huipulla – näin kannattava\nL79: yritys myytiin, Vaasan tehdas suljettiin ja tuotanto siirrettiin ulkomaille\".\nL80: _www.iltalehti.fi_ (in Finnish). Retrieved 2025-12-18.\nL81: \nL82: 07. ↑\nL83: \nL84: Leppänen, Timo (2016). _Merkilliset nimet: tarinoita yritystenja tuotteiden\nL85: nimistä_. Kirjokansi. Helsinki: Suomalaisen kirjallisuuden seura. ISBN\nL86: \nL87: 978-952-222-720-1\nL88: \nL89: .\nL90: \nL91: 08. ↑ käyttäjäprofiili, Latomon (1994-11-11). \"Kemiran noteeraus alkoi\".\nL92: _Helsingin Sanomat_ (in Finnish). Retrieved 2025-12-18.\nL93: \nL94: 09. ↑ Hulkko, Kustaa (2010-07-26). \"Kemiran vanhat synnit ja uusi ura: Yritys\nL95: veden varassa\". _Suomenkuvalehti.fi_ (in Finnish). Retrieved 2025-12-18.\nL96: \nL97: 10. ↑\"Yritykset \\| Kemira lähtee Venäjältä kokonaan\". _Helsingin Sanomat_\nL98: (in Finnish). 2022-05-06. Retrieved 2025-12-18.\nL99: \nL100: 11. ↑ Boxberg, Katja (2024-05-17). \"Hän on Kemiran uusi toimitusjohtaja:\nL101: Johtaa nyt yhtiötä, joka on kovassa tuloskunnossa ja kurssi nousussa\".\nL102: _Talouselämä_ (in Finnish). Retrieved 2025-12-18.\nL103: \nL104: 12. ↑\"Contacts\". _Kemira_. Retrieved 2025-12-18.\nL105: \nL106: 13. ↑ Mustonen, Antti (2017-10-25). \"Kemira petrasi - tehostusohjelma etenee\".\nL107: _Arvopaperi_ (in Finnish). Retrieved 2025-12-18.\nL108: \nL109: 14. ↑\"Nimitykset \\| Kemira valitsi Antti Salmisen uudeksi\nL110: toimitusjohtajakseen\". _Helsingin Sanomat_ (in Finnish). 2023-12-19. Retrieved\nL111: 2025-12-18.\nL112: \nL113: 15. ↑ Nenonen, Rosamari (2024-10-18). \"Tylsäksi mielletyn Kemiran osake nousi\nL114: parissa vuodessa 90 prosenttia: Tältä yhtiö näyttää nyt\". _Talouselämä_\nL115: (in Finnish). Retrieved 2025-12-18.",
+                  "score": 0.0,
+                  "title": "en.wikipedia.org - viewing lines [0 - 115] of 115",
+                  "url": "https://en.wikipedia.org/wiki/Kemira"
+                }
+              ]
+            },
+            "name": "browser.open"
+          }
+        ],
+        "function_call": null,
+        "reasoning": "We need current CEO of Kemira. Search web.Open Wikipedia.",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1792532771,
+  "model": "openai/gpt-oss-120b",
+  "object": "chat.completion",
+  "mcp_list_tools": null,
+  "service_tier": "on_demand",
+  "system_fingerprint": "fp_c868cf1eaa",
+  "usage": {
+    "completion_tokens": 126,
+    "prompt_tokens": 4060,
+    "total_tokens": 4186,
+    "completion_time": 0.26428653,
+    "completion_tokens_details": {
+      "reasoning_tokens": 51
+    },
+    "prompt_time": 0.253460274,
+    "prompt_tokens_details": null,
+    "queue_time": 0.682779921,
+    "total_time": 0.517746804
+  },
+  "usage_breakdown": null,
+  "x_groq": {
+    "id": "req_01m5dmet1tejksha45248e66f7",
+    "debug": null,
+    "seed": 917587749,
+    "usage": null
+  }
+}

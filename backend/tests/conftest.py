@@ -13,6 +13,7 @@ from sqlalchemy.pool import NullPool
 
 from app.config import get_settings
 from app.db.models import Base
+from app.llm.limits import reset_limits
 from app.loop import run
 
 TEST_DB = "answerwatch_test"
@@ -69,3 +70,41 @@ def db(test_db_url: str) -> Iterator[DbCall]:
     run(reset(create=True))
     yield call
     run(reset(create=False))
+
+
+@pytest.fixture(autouse=True)
+def _fresh_limits() -> Iterator[None]:
+    reset_limits()
+    yield
+    reset_limits()
+
+
+@pytest.fixture
+def no_db_logging(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
+    """Replace llm_calls logging with an in-memory list; returns the list."""
+    calls: list[dict[str, Any]] = []
+
+    async def fake_log_call(**kwargs: Any) -> None:
+        calls.append(kwargs)
+
+    for module in ("app.llm.engines", "app.llm.internal", "app.llm.embeddings"):
+        monkeypatch.setattr(f"{module}.log_call", fake_log_call)
+    return calls
+
+
+@pytest.fixture
+def memory_cache(monkeypatch: pytest.MonkeyPatch) -> dict[str, dict[str, Any]]:
+    """Replace llm_cache with a dict; returns the dict."""
+    store: dict[str, dict[str, Any]] = {}
+
+    async def fake_get(key: str) -> dict[str, Any] | None:
+        return store.get(key)
+
+    async def fake_set(key: str, provider: str, model: str, payload: dict[str, Any]) -> None:
+        if payload:
+            store.setdefault(key, payload)
+
+    for module in ("app.llm.internal", "app.llm.embeddings"):
+        monkeypatch.setattr(f"{module}.cache_get", fake_get)
+        monkeypatch.setattr(f"{module}.cache_set", fake_set)
+    return store
