@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.1
       - run: uv sync --project backend --frozen
       - name: Run the job
         # JOB, COMPANY and TRIGGER go through env vars, never straight into the shell command.
