@@ -55,7 +55,7 @@ If you still have energy on Day 0, start D1.1.
 - **Done when:** the Kemira profile is in the database.
 
 ### D1.3 AI layer
-- **Build:** SPEC §7 completely: `config/engines.yaml`; tested engines (`groq_web` with browser_search and citations, `gemini_memory`, `openrouter_memory`); our AI via LangChain with structured Pydantic output, Gemini → Groq fallback, dev mode; embeddings 768-dim normalised (check whether LangChain's Gemini embeddings support `output_dimensionality`; if not, write the wrapper); limits, retries, daily-stop detection, cache rules (never cache tested-engine answers or errors), `llm_calls` logging; `ping` command; `ping --save-fixture` saves raw responses to `tests/fixtures/`. Tests with fakes only.
+- **Build:** SPEC §7 completely: `backend/config/engines.yaml`; tested engines (`groq_web` with browser_search and citations, `gemini_memory`, `openrouter_memory`); our AI via LangChain with structured Pydantic output, Gemini → Groq fallback, dev mode; embeddings 768-dim normalised (check whether LangChain's Gemini embeddings support `output_dimensionality`; if not, write the wrapper); limits, retries, daily-stop detection, cache rules (never cache tested-engine answers or errors), `llm_calls` logging; `ping` command; `ping --save-fixture` saves raw responses to `tests/fixtures/`. Tests with fakes only.
 - **Check:** `uv run python -m app.cli ping --save-fixture`.
 - **Done when:** `groq_web` OK with at least 1 citation, `gemini_memory` OK, all internal roles OK, embeddings return 768 numbers, fixtures saved. Disabled engines show "disabled", not an error.
 

@@ -15,7 +15,7 @@ app = FastAPI(title="AnswerWatch API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[get_settings().frontend_origin],
+    allow_origins=get_settings().allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],  # includes X-Admin-Token
 )

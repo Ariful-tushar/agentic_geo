@@ -1,0 +1,53 @@
+name: agents
+on:
+  schedule:
+    # 07:15 Helsinki time all year (GitHub docs: workflow syntax, `on.schedule` supports `timezone`).
+    # Scheduled runs can start 5 to 30 minutes late.
+    - cron: "15 7 * * *"
+      timezone: "Europe/Helsinki"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "daily | onboard | ax | competitor | faq"
+        required: true
+        default: "daily"
+      company:
+        description: "company id (empty = every company with monitoring on; only for daily)"
+        required: false
+        default: ""
+concurrency:
+  group: agents-${{ github.event.inputs.company || 'all' }}
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv sync --project backend --frozen
+      - name: Run the job
+        # JOB, COMPANY and TRIGGER go through env vars, never straight into the shell command.
+        run: |
+          args=(job "$JOB" --trigger "$TRIGGER")
+          if [ -n "$COMPANY" ]; then args+=(--company "$COMPANY"); fi
+          uv run --project backend --frozen python -m app.cli "${args[@]}"
+        env:
+          JOB: ${{ github.event.inputs.job || 'daily' }}
+          COMPANY: ${{ github.event.inputs.company }}
+          TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL }}
+          WIKIPEDIA_CONTACT: ${{ secrets.WIKIPEDIA_CONTACT }}
+          GITHUB_REPO: ${{ github.repository }}
+          # model names and limits: repository variables (Settings > Variables) or the defaults in config.py
+          GEMINI_PROBE_MODEL: ${{ vars.GEMINI_PROBE_MODEL }}
+          GEMINI_INTERNAL_MODEL: ${{ vars.GEMINI_INTERNAL_MODEL }}
+          GROQ_PROBE_MODEL: ${{ vars.GROQ_PROBE_MODEL }}
+          GROQ_INTERNAL_MODEL: ${{ vars.GROQ_INTERNAL_MODEL }}
+          OPENROUTER_MEMORY_MODEL: ${{ vars.OPENROUTER_MEMORY_MODEL }}

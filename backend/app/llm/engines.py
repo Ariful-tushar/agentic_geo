@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from functools import lru_cache
-from pathlib import Path
 
 import yaml
 
@@ -13,8 +12,6 @@ from app.llm.limits import call_with_retries, record_tokens, wait_for_token_budg
 from app.llm.openrouter_engine import ask_openrouter
 from app.llm.usage import log_call
 from app.schemas.agents import EngineAnswer, EngineConfig
-
-ENGINES_FILE = Path(__file__).resolve().parents[3] / "config" / "engines.yaml"
 
 _KEY_SETTING = {
     "groq": "groq_api_key",
@@ -92,7 +89,7 @@ class Engine:
 
 @lru_cache
 def load_engines() -> tuple[Engine, ...]:
-    data = yaml.safe_load(ENGINES_FILE.read_text(encoding="utf-8"))
+    data = yaml.safe_load(get_settings().engines_file.read_text(encoding="utf-8"))
     return tuple(Engine(EngineConfig(**item)) for item in data["engines"])
 
 

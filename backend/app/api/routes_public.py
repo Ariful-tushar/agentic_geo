@@ -106,7 +106,7 @@ def known_engine_ids() -> set[str]:
 
 @router.get("/engines", response_model=list[EngineOut], tags=["engines"])
 async def engines() -> list[EngineOut]:
-    """The tested engines (from config/engines.yaml) plus the pseudo-engine `rag`."""
+    """The tested engines (from backend/config/engines.yaml) plus the pseudo-engine `rag`."""
     tested = [
         EngineOut(id=e.id, label=e.config.label, web_search=e.config.web_search, enabled=e.enabled)
         for e in load_engines()

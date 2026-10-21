@@ -1,7 +1,10 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
@@ -40,14 +43,22 @@ class Settings(BaseSettings):
     email_from_name: str = "AnswerWatch"
 
     admin_password: str = "change-me"
+    # one or more allowed browser origins, comma separated (CORS)
     frontend_origin: str = "http://localhost:5173"
     dashboard_url: str = "http://localhost:5173"
     timezone: str = "Europe/Helsinki"
+
+    # tested-engine list; the default file lives in backend/config so the Docker image has it
+    engines_file: Path = BACKEND_DIR / "config" / "engines.yaml"
 
     job_runner: str = "local"
     github_repo: str = "your-user/answerwatch"
     github_ref: str = "main"
     github_dispatch_token: str = ""
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        return [o.strip().rstrip("/") for o in self.frontend_origin.split(",") if o.strip()]
 
     @field_validator("database_url", mode="before")
     @classmethod

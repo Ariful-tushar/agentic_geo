@@ -23,7 +23,7 @@ class EngineAnswer(BaseModel):
 
 
 class EngineConfig(BaseModel):
-    """One entry of config/engines.yaml."""
+    """One entry of backend/config/engines.yaml."""
 
     id: str
     provider: str

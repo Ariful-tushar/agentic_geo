@@ -102,13 +102,12 @@ answerwatch/
   .github/workflows/
     ci.yml                  # tests on every push (Postgres+pgvector service container)
     agents.yml              # daily schedule + workflow_dispatch jobs
-  config/
-    engines.yaml            # tested AI engines (global for all companies)
   seed/
     kemira.profile.yaml     # Kemira profile to import (questions, expected answers, competitors, sources)
     public-questions.html   # demo "public questions" page for the FAQ agent
   backend/
     pyproject.toml  Dockerfile  alembic.ini  alembic/versions/
+    config/engines.yaml     # tested AI engines (global for all companies); path = ENGINES_FILE setting
     app/
       main.py               # FastAPI app, routers, CORS
       config.py             # settings (pydantic-settings)
@@ -207,7 +206,7 @@ RAG chunks live in the tables managed by `langchain-postgres` (collection `kb_<c
 
 ## 7. AI layer (`app/llm/`)
 
-### 7.1 Tested engines (`config/engines.yaml`)
+### 7.1 Tested engines (`backend/config/engines.yaml`)
 
 ```yaml
 engines:
@@ -517,7 +516,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --project backend
-      - run: uv run --project backend python -m app.cli ${{ github.event.inputs.job || 'daily' }} ${{ github.event.inputs.company && format('--company {0}', github.event.inputs.company) || '' }} --trigger ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+      - run: uv run --project backend python -m app.cli job "$JOB" [--company "$COMPANY" when not empty] --trigger "$TRIGGER"   # see .github/workflows/agents.yml
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
