@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.agents.ax.nodes import AxDeps, AxState, Brand, get_run, load_context
 from app.db.models import Answer, CompetitorEvent, Mention, Question
@@ -61,24 +62,46 @@ def find_brands(text: str, brands: list[Brand]) -> list[Match]:
     return sorted(first.values(), key=lambda m: m.start)
 
 
-def find_others(text: str, names: list[str], tracked: list[Match]) -> list[Match]:
-    """Other company names the AI listed, kept only if they appear in the text as whole words."""
+def normalise(name: str) -> str:
+    return " ".join(name.split()).casefold()
+
+
+def find_others(
+    text: str, names: list[str], tracked: list[Match], brands: list[Brand] | None = None
+) -> list[Match]:
+    """Other company names the AI listed, kept only if they appear in the text as whole words.
+
+    A name that is an alias of the company or of a competitor is not "other" (alias matching
+    already covers it, and later mentions of it must not come back as a second row).
+    """
     taken = [(m.start, m.end) for m in tracked]
+    known = {normalise(alias) for brand in brands or [] for alias in brand.names}
     found: dict[str, Match] = {}
     for name in names:
         name = name.strip()
-        if not name or name.casefold() in found:
+        key = normalise(name)
+        if not name or key in found or key in known:
             continue
         for match in _pattern(name).finditer(text):
             if not _overlaps(taken, match.start(), match.end()):
-                found[name.casefold()] = Match(None, name, match.start(), match.end())
+                found[key] = Match(None, name, match.start(), match.end())
                 break
     return sorted(found.values(), key=lambda m: m.start)[:MAX_OTHER_NAMES]
 
 
 def rank_matches(tracked: list[Match], others: list[Match]) -> list[tuple[Match, int]]:
-    """Everything named, in order of appearance, with rank 1, 2, 3..."""
-    ordered = sorted([*tracked, *others], key=lambda m: m.start)
+    """Everything named, in order of appearance, with rank 1, 2, 3...
+
+    One entry per normalised name (case-insensitive, trimmed): the first appearance keeps its
+    rank, and a company/competitor entry wins over an "other" entry of the same name.
+    """
+    kept: dict[str, Match] = {}
+    for match in sorted([*tracked, *others], key=lambda m: m.start):
+        key = normalise(match.name)
+        current = kept.get(key)
+        if current is None or (current.brand is None and match.brand is not None):
+            kept[key] = match
+    ordered = sorted(kept.values(), key=lambda m: m.start)
     return [(m, i) for i, m in enumerate(ordered, start=1)]
 
 
@@ -135,20 +158,22 @@ async def mentions(state: AxState, deps: AxDeps) -> dict[str, Any]:
             for answer, question in pairs:
                 tracked = find_brands(answer.text or "", ctx.brands)
                 others = find_others(
-                    answer.text or "", others_by_code.get(question.code, []), tracked
+                    answer.text or "", others_by_code.get(question.code, []), tracked, ctx.brands
                 )
                 for match, rank in rank_matches(tracked, others):
                     brand = match.brand
-                    session.add(
-                        Mention(
+                    result = await session.execute(
+                        pg_insert(Mention)
+                        .values(
                             answer_id=answer.id,
                             brand_type=brand.type if brand else "other",
                             competitor_id=brand.competitor_id if brand else None,
                             name=match.name,
                             rank=rank,
                         )
+                        .on_conflict_do_nothing(index_elements=["answer_id", "name"])
                     )
-                    stored += 1
+                    stored += result.rowcount
                 done.add(str(answer.id))
             run.details = {**(run.details or {}), DONE_KEY: sorted(done)}
             await session.commit()  # mentions of this engine and the "done" mark, together

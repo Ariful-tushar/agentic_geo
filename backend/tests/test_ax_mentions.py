@@ -82,6 +82,28 @@ def test_other_names_must_be_in_the_text_and_not_overlap_tracked_brands() -> Non
     assert [(m.name, r) for m, r in ranked][:3] == [("Ecolab", 1), ("Veolia", 2), ("Kemira", 3)]
 
 
+def test_an_ai_name_that_is_a_tracked_alias_is_not_an_other_name() -> None:
+    # the second "Solenis" is not covered by the first-appearance match of the tracked brand
+    solenis = Brand("Solenis", ["Solenis LLC"], "competitor")
+    text = "Solenis leads. Later Solenis is named again, and so is Veolia."
+    tracked = find_brands(text, [KEMIRA, solenis])
+    assert [m.name for m in find_others(text, ["Solenis"], tracked)] == ["Solenis"]  # the old bug
+    others = find_others(text, ["solenis", " SOLENIS LLC ", "Veolia", "veolia"], tracked, [solenis])
+    assert [m.name for m in others] == ["Veolia"]
+
+
+def test_one_entry_per_normalised_name_and_the_company_or_competitor_wins() -> None:
+    from app.agents.ax.mentions import Match
+
+    tracked = [Match(SNF, "SNF", 20, 23)]
+    others = [Match(None, "snf ", 5, 8), Match(None, "SNF", 40, 43), Match(None, "Veolia", 30, 36)]
+    ranked = rank_matches(tracked, others)
+    assert [(m.name, m.brand is not None, r) for m, r in ranked] == [
+        ("SNF", True, 1),
+        ("Veolia", False, 2),
+    ]
+
+
 def test_other_names_are_capped() -> None:
     text = " ".join(f"Firm{i}" for i in range(40))
     assert len(find_others(text, [f"Firm{i}" for i in range(40)], [])) == 15
@@ -231,6 +253,35 @@ def test_a_stopped_other_names_call_is_retried_and_nothing_half_done_is_stored(
     second = execute(db, engines, llm)
     assert second.status == "completed"
     assert ("groq_web", "G01") in mention_rows(db) and set(events(db)) == {"G01", "G02"}
+
+
+def test_the_same_name_from_alias_matching_and_the_ai_list_is_stored_once(
+    db: DbCall, fake_rag: dict[str, Any]
+) -> None:
+    second = "Solenis and Nalco Water supply coagulants, and Solenis is large."
+    llm = FakeLlm()
+    llm.others = {"G01": [], "G02": ["Solenis", "solenis", " Veolia ", "NALCO WATER"]}
+    engines = [generic_engine(second=second)]
+    execute(db, engines, llm)
+    rows = mention_rows(db)[("groq_web", "G02")]
+    assert rows == [("Solenis", "competitor", 1), ("Ecolab", "competitor", 2)]
+
+
+def test_a_rerun_after_a_lost_done_mark_does_not_crash_or_duplicate(
+    db: DbCall, fake_rag: dict[str, Any]
+) -> None:
+    llm, engines = llm_with_others(), [generic_engine()]
+    execute(db, engines, llm)
+    before = mention_rows(db)
+
+    async def forget(session: AsyncSession) -> None:
+        run = await session.scalar(select(Run))
+        run.details = {k: v for k, v in run.details.items() if k != DONE_KEY}
+        await session.commit()
+
+    query(db, forget)
+    execute(db, engines, llm)  # inserts hit the unique key: ON CONFLICT DO NOTHING
+    assert mention_rows(db) == before
 
 
 def test_done_marker_is_kept_in_the_run_details(db: DbCall, fake_rag: dict[str, Any]) -> None:
