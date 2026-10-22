@@ -184,7 +184,7 @@ All tables have `created_at`. Use UUID primary keys unless noted. Every company-
 | `questions` | id, company_id, code, kind (`fact`/`generic`), text, expected_answer, expected_value numeric, tolerance numeric, unit, expected_source_url | (company_id, code) |
 | `knowledge_sources` | id, company_id, url, status, last_built_at | (company_id, url) |
 | `pages` | id, url, final_url, domain, title, h1, text, published_date, date_kind (`published`/`modified`), status (`ok`/`blocked_by_robots`/`skipped_non_html`/`http_error`/`fetch_error`), http_status, fetched_at | url unique |
-| `runs` | id, company_id, kind (`ax`/`competitor`/`faq`/`daily`/`onboard`), run_date (date, Helsinki), trigger (`schedule`/`manual`), status (`running`/`completed`/`partial`/`failed`/`skipped`), started_at, finished_at, details jsonb | (company_id, kind, run_date) |
+| `runs` | id, company_id, kind (`ax`/`competitor`/`faq`/`daily`/`onboard`), run_date (date, Helsinki), trigger (`schedule`/`manual`/`simulated`), status (`running`/`completed`/`partial`/`failed`/`skipped`), started_at, finished_at, details jsonb | (company_id, kind, run_date) |
 | `answers` | id, run_id, company_id, question_id, engine (engine id or `rag`), asked_at, text, raw_json jsonb, latency_ms, error | (run_id, question_id, engine) |
 | `citations` | id, answer_id, url, title, domain, owner (`company`/`competitor`/`third_party`), competitor_id | (answer_id, url) |
 | `scores` | id, answer_id, verdict (`correct`/`partial`/`wrong`/`no_answer`), score (1, 0.5, 0), reason, quote, quote_verified bool, method (`judge`/`numeric`) | answer_id unique |

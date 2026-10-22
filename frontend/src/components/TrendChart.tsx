@@ -3,13 +3,14 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceArea,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
 import type { EngineOut, TrendPoint } from '@/api/types'
-import { lastDays, percent, shortDate, todayHelsinki } from '@/lib/format'
+import { lastDays, longDate, percent, shortDate, todayHelsinki } from '@/lib/format'
 
 // One fixed colour per engine id, so a line keeps its colour on every page.
 const ENGINE_COLORS: Record<string, string> = {
@@ -24,15 +25,19 @@ export function engineColor(engineId: string, index = 0): string {
   return ENGINE_COLORS[engineId] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]
 }
 
-type Row = { date: string } & Record<string, number | string | null>
+type Row = { date: string } & Record<string, number | string | boolean | null>
 
 // One row per calendar day of the range. A day without data has no value (null), so the
 // x-axis keeps the gap; the lines use connectNulls={false}, so they are not drawn across it.
 function buildRows(points: TrendPoint[], engineIds: string[], days: number): Row[] {
   return lastDays(days, todayHelsinki()).map((date) => {
-    const row: Row = { date }
+    const row: Row = { date, simulated: false }
     for (const id of engineIds) row[id] = null
-    for (const p of points) if (p.date === date) row[p.engine] = p.accuracy
+    for (const p of points) {
+      if (p.date !== date) continue
+      row[p.engine] = p.accuracy
+      if (p.simulated) row.simulated = true
+    }
     return row
   })
 }
@@ -51,7 +56,12 @@ export function TrendChart({ points, engines, days }: Props) {
   const labels = Object.fromEntries(shown.map((e) => [e.id, e.label]))
   const rows = buildRows(points, engineIds, days)
 
+  // Simulated demo days are drawn as a grey band with hollow points (see the caption below).
+  const simulatedDays = rows.filter((r) => r.simulated).map((r) => r.date)
+  const firstReal = points.filter((p) => !p.simulated).map((p) => p.date).sort()[0]
+
   return (
+    <div>
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
@@ -72,6 +82,16 @@ export function TrendChart({ points, engines, days }: Props) {
             labelFormatter={(label) => shortDate(String(label))}
             formatter={(value, name) => [percent(Number(value)), labels[String(name)] ?? name]}
           />
+          {simulatedDays.length > 0 && (
+            <ReferenceArea
+              x1={simulatedDays[0]}
+              x2={simulatedDays[simulatedDays.length - 1]}
+              fill="#9ca3af"
+              fillOpacity={0.2}
+              stroke="none"
+              ifOverflow="visible"
+            />
+          )}
           <Legend formatter={(value) => labels[String(value)] ?? value} />
           {engineIds.map((id, index) => (
             <Line
@@ -81,7 +101,23 @@ export function TrendChart({ points, engines, days }: Props) {
               type="monotone"
               stroke={engineColor(id, index)}
               strokeWidth={2}
-              dot={{ r: 4, fill: engineColor(id, index), strokeWidth: 0 }}
+              dot={(props) => {
+                const { cx, cy, payload, key } = props
+                if (cx == null || cy == null) return <g key={key} />
+                const color = engineColor(id, index)
+                const simulated = Boolean(payload?.simulated)
+                return (
+                  <circle
+                    key={key}
+                    cx={cx}
+                    cy={cy}
+                    r={4}
+                    fill={simulated ? '#ffffff' : color}
+                    stroke={color}
+                    strokeWidth={simulated ? 2 : 0}
+                  />
+                )
+              }}
               activeDot={{ r: 6 }}
               connectNulls={false}
               isAnimationActive={false}
@@ -89,6 +125,14 @@ export function TrendChart({ points, engines, days }: Props) {
           ))}
         </LineChart>
       </ResponsiveContainer>
+    </div>
+    {simulatedDays.length > 0 && (
+      <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+        <span aria-hidden className="inline-block h-3 w-5 rounded-sm bg-gray-400/30" />
+        Simulated history (demo), real monitoring since{' '}
+        {firstReal ? longDate(firstReal) : '22 Oct 2026'}
+      </p>
+    )}
     </div>
   )
 }

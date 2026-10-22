@@ -7,3 +7,5 @@ logs/
 .pytest_cache/
 .ruff_cache/
 everything.md
+x.py
+demo_history.sql

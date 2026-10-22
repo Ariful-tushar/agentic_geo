@@ -158,12 +158,22 @@ async def set_onboarding(
     await session.commit()
 
 
+SIMULATED = "simulated"  # runs.trigger of seeded demo history: charts only, never alerts or emails
+
+
 def live_daily_accuracy(company_id: str, mode: str = "live") -> Select[tuple[DailyAccuracy]]:
-    """Accuracy rows the API, trend, alerts and emails may use: live runs only, never dev.
+    """Accuracy rows the API, alerts and emails may use: real live runs only, never dev and
+    never simulated demo history (only `accuracy_since` for the chart adds the simulated days).
 
     `mode="dev"` is only for the dev preview of an email."""
-    return select(DailyAccuracy).where(
-        DailyAccuracy.company_id == company_id, DailyAccuracy.mode == mode
+    return (
+        select(DailyAccuracy)
+        .join(Run, Run.id == DailyAccuracy.run_id)
+        .where(
+            DailyAccuracy.company_id == company_id,
+            DailyAccuracy.mode == mode,
+            Run.trigger != SIMULATED,
+        )
     )
 
 
@@ -173,7 +183,11 @@ def live_competitor_events(company_id: str, mode: str = "live") -> Select[tuple[
         select(CompetitorEvent)
         .join(Answer, Answer.id == CompetitorEvent.answer_id)
         .join(Run, Run.id == Answer.run_id)
-        .where(CompetitorEvent.company_id == company_id, Run.mode == mode)
+        .where(
+            CompetitorEvent.company_id == company_id,
+            Run.mode == mode,
+            Run.trigger != SIMULATED,
+        )
     )
 
 
@@ -183,7 +197,11 @@ def live_competitor_events(company_id: str, mode: str = "live") -> Select[tuple[
 async def latest_live_runs(session: AsyncSession) -> dict[str, Run]:
     """The most recent live run of every company."""
     runs = (
-        await session.scalars(select(Run).where(Run.mode == "live").order_by(Run.started_at.desc()))
+        await session.scalars(
+            select(Run)
+            .where(Run.mode == "live", Run.trigger != SIMULATED)
+            .order_by(Run.started_at.desc())
+        )
     ).all()
     latest: dict[str, Run] = {}
     for run in runs:
@@ -226,11 +244,35 @@ async def get_company_parts(
 
 async def accuracy_since(
     session: AsyncSession, company_id: str, since: date
-) -> list[DailyAccuracy]:
+) -> list[tuple[DailyAccuracy, bool]]:
+    """Chart points of live runs, each flagged: is this day simulated demo history?"""
     stmt = (
-        live_daily_accuracy(company_id)
-        .where(DailyAccuracy.run_date >= since)
+        select(DailyAccuracy, Run.trigger == SIMULATED)
+        .join(Run, Run.id == DailyAccuracy.run_id)
+        .where(
+            DailyAccuracy.company_id == company_id,
+            DailyAccuracy.mode == "live",
+            DailyAccuracy.run_date >= since,
+        )
         .order_by(DailyAccuracy.run_date, DailyAccuracy.engine)
+    )
+    return [(row, bool(simulated)) for row, simulated in (await session.execute(stmt)).all()]
+
+
+async def simulated_dates(
+    session: AsyncSession, company_id: str, date_from: date, date_to: date
+) -> list[date]:
+    """Days in the range that are seeded demo history (no answers are stored for them)."""
+    stmt = (
+        select(Run.run_date)
+        .where(
+            Run.company_id == company_id,
+            Run.kind == "ax",
+            Run.mode == "live",
+            Run.trigger == SIMULATED,
+            Run.run_date.between(date_from, date_to),
+        )
+        .order_by(Run.run_date)
     )
     return list((await session.scalars(stmt)).all())
 
@@ -354,7 +396,7 @@ async def alerts_since(
 async def recent_runs(session: AsyncSession, company_id: str, limit: int) -> list[Run]:
     stmt = (
         select(Run)
-        .where(Run.company_id == company_id, Run.mode == "live")
+        .where(Run.company_id == company_id, Run.mode == "live", Run.trigger != SIMULATED)
         .order_by(Run.started_at.desc())
         .limit(limit)
     )

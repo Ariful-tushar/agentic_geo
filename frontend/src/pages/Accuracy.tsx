@@ -12,6 +12,9 @@ import { lastDays, shortDate, todayHelsinki } from '@/lib/format'
 import { cellStyle } from '@/lib/verdict'
 
 const RANGES = [7, 14, 30]
+// dashed grey: seeded demo history (colour is not the only signal: it also says "sim")
+const SIMULATED_CLASS =
+  'border border-dashed border-muted-foreground/40 bg-muted/40 text-[10px] text-muted-foreground'
 
 function Legend() {
   const items = [
@@ -19,12 +22,17 @@ function Legend() {
     ['bg-amber-100 text-amber-900', '½', 'partly correct'],
     ['bg-red-100 text-red-900', '0', 'wrong'],
     ['bg-muted text-muted-foreground', '–', 'no answer, error or not scored'],
+    [SIMULATED_CLASS, 'sim', 'simulated, no answers stored'],
   ]
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
       {items.map(([cls, symbol, label]) => (
         <li key={label} className="flex items-center gap-1.5">
-          <span className={`inline-flex size-5 items-center justify-center rounded ${cls}`}>{symbol}</span>
+          <span
+            className={`inline-flex size-5 min-w-5 items-center justify-center rounded ${cls}`}
+          >
+            {symbol}
+          </span>
           {label}
         </li>
       ))}
@@ -35,10 +43,11 @@ function Legend() {
 interface MatrixProps {
   rows: DetailRow[]
   dates: string[]
+  simulated: Set<string>
   onOpen: (answerId: string) => void
 }
 
-function Matrix({ rows, dates, onOpen }: MatrixProps) {
+function Matrix({ rows, dates, simulated, onOpen }: MatrixProps) {
   // on a phone the newest day (the right-hand end) is the interesting one
   const scroller = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -54,6 +63,7 @@ function Matrix({ rows, dates, onOpen }: MatrixProps) {
             {dates.map((date) => (
               <th key={date} className="px-1 py-2 text-center text-xs font-normal text-muted-foreground">
                 {shortDate(date)}
+                {simulated.has(date) && <span className="block text-[10px]">sim</span>}
               </th>
             ))}
           </tr>
@@ -69,6 +79,20 @@ function Matrix({ rows, dates, onOpen }: MatrixProps) {
               </th>
               {dates.map((date) => {
                 const cell = row.cells[date]
+                if (simulated.has(date)) {
+                  const label = `${row.code}, ${shortDate(date)}: simulated, no answers stored`
+                  return (
+                    <td key={date} className="border-t p-1 text-center">
+                      <span
+                        title={label}
+                        aria-label={label}
+                        className={`inline-flex size-8 min-w-8 items-center justify-center rounded ${SIMULATED_CLASS}`}
+                      >
+                        sim
+                      </span>
+                    </td>
+                  )
+                }
                 if (!cell) {
                   return (
                     <td key={date} className="border-t p-1 text-center text-muted-foreground/50">
@@ -165,11 +189,12 @@ export default function Accuracy() {
             <Matrix
               rows={details.data.rows}
               dates={dates}
+              simulated={new Set(details.data.simulated_dates)}
               onOpen={(id) => update({ answer: id })}
             />
           )}
           <p className="text-xs text-muted-foreground">
-            Click a cell to see the answer, the reason and the previous day. A dot means no run that day.
+            Click a cell to see the answer, the reason and the previous day. A dot means no run that day. "sim" means simulated demo history: no answers are stored for those days.
           </p>
         </CardContent>
       </Card>

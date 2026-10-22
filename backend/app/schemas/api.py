@@ -104,6 +104,7 @@ class TrendPoint(BaseModel):
     date: date
     engine: str
     accuracy: float
+    simulated: bool = False  # seeded demo history, shown as such in the chart
 
 
 class TodayItem(BaseModel):
@@ -135,6 +136,7 @@ class DetailsOut(BaseModel):
     date_from: date
     date_to: date
     dates: list[date]
+    simulated_dates: list[date] = []  # demo history days: no answers are stored for them
     rows: list[DetailRow]
 
 

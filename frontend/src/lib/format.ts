@@ -22,6 +22,17 @@ export function shortDate(iso: string): string {
   )
 }
 
+/** "2026-10-22" -> "22 Oct 2026". */
+export function longDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(y, m - 1, d)))
+}
+
 export function dateTime(iso: string): string {
   return new Intl.DateTimeFormat('en-GB', {
     dateStyle: 'medium',

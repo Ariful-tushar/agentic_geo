@@ -102,7 +102,8 @@ export default function Overview() {
   if (!companyId) return <p className="text-muted-foreground">No company profile yet. Create one on the Setup page.</p>
 
   const labels = Object.fromEntries((engines.data ?? []).map((e) => [e.id, e.label]))
-  const dataDays = new Set((trend.data ?? []).map((p) => p.date)).size
+  // only real days count: simulated demo history does not make a trend of real runs
+  const dataDays = new Set((trend.data ?? []).filter((p) => !p.simulated).map((p) => p.date)).size
   const latestAlerts = [...(alerts.data ?? [])]
     .sort((a, b) => b.run_date.localeCompare(a.run_date))
     .slice(0, 5)

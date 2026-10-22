@@ -79,6 +79,7 @@ export interface TrendPoint {
   date: string
   engine: string
   accuracy: number
+  simulated: boolean // seeded demo history, not a real run
 }
 
 export interface TodayItem {
@@ -160,6 +161,7 @@ export interface DetailsOut {
   date_from: string
   date_to: string
   dates: string[]
+  simulated_dates: string[] // demo history days: no answers are stored for them
   rows: DetailRow[]
 }
 

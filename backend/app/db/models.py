@@ -143,7 +143,7 @@ class Run(Base):
         UniqueConstraint("company_id", "kind", "run_date", "mode"),
         _in("kind", ("ax", "competitor", "faq", "daily", "onboard")),
         _in("mode", ("dev", "live")),
-        _in("trigger", ("schedule", "manual")),
+        _in("trigger", ("schedule", "manual", "simulated")),  # simulated = seeded demo history
         _in("status", ("running", "completed", "partial", "failed", "skipped")),
     )
 

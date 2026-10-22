@@ -75,6 +75,7 @@ async def previous_run(session: AsyncSession, state: AxState) -> Run | None:
             Run.company_id == state["company_id"],
             Run.kind == "ax",
             Run.mode == "live",
+            Run.trigger != "simulated",  # seeded demo history is not a previous run
             Run.status == "completed",
             Run.run_date < state["run_date"],
         )

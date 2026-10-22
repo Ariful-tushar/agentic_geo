@@ -176,7 +176,10 @@ async def accuracy_trend(
     """One point per day and engine (the line chart). Days without a live run have no point."""
     await company_or_404(session, company_id)
     rows = await repo.accuracy_since(session, company_id, today - timedelta(days=days - 1))
-    return [TrendPoint(date=r.run_date, engine=r.engine, accuracy=float(r.accuracy)) for r in rows]
+    return [
+        TrendPoint(date=r.run_date, engine=r.engine, accuracy=float(r.accuracy), simulated=sim)
+        for r, sim in rows
+    ]
 
 
 @router.get(
@@ -246,6 +249,7 @@ async def accuracy_details(
         date_from=start,
         date_to=end,
         dates=sorted({run_date for _, _, run_date in cells}),
+        simulated_dates=await repo.simulated_dates(session, company_id, start, end),
         rows=[
             DetailRow(question_id=q.id, code=q.code, text=q.text, cells=by_question.get(q.id, {}))
             for q in questions

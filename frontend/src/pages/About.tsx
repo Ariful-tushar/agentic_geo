@@ -14,6 +14,7 @@ const LIMITS = [
   'The judge is an AI. Its reason and quote are shown so a person can check it.',
   'Root causes are likely causes, not proof.',
   'Facts come from the company\'s public publications and were not reviewed by the company.',
+  'Days marked "simulated" are seeded demo history that only fills the charts. No answers are stored for them, and they are never used for alerts or emails. Real monitoring starts with the first real run.',
 ]
 
 export default function About() {
