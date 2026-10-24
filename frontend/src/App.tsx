@@ -33,12 +33,12 @@ export default function App() {
                 <Route path="competitors" element={<Competitors />} />
                 <Route path="alerts" element={<Alerts />} />
                 <Route path="faq" element={<Faq />} />
-                <Route path="add-question" element={<AddQuestion />} />
                 <Route path="readiness" element={<Readiness />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="setup" element={<Setup />} />
                 <Route path="*" element={<Placeholder title="Page not found" step="?" />} />
               </Route>
+              <Route path="/add-question" element={<AddQuestion />} />
             </Routes>
           </CompanyProvider>
         </BrowserRouter>
