@@ -87,6 +87,35 @@ async def run_competitor_command(
     return 0 if result.status == "completed" else 1
 
 
+async def run_faq_command(company_id: str, mode: str = "live", trigger: str = "manual") -> int:
+    from app.agents.faq.graph import default_deps, run_faq
+
+    deps = default_deps()
+    try:
+        result = await run_faq(deps, company_id, mode=mode)
+    finally:
+        await deps.fetcher.aclose()
+        await get_engine().dispose()
+    prefix = "DEV (nothing stored): " if mode == "dev" else ""
+    print(
+        f"{prefix}FAQ agent {result.status}: {result.found} questions on the pages, "
+        f"{result.duplicates} already known, {result.new} new ({result.relevant} relevant), "
+        f"{result.drafts} drafts, {result.unanswerable} not answerable from our sources, "
+        f"{result.postponed} postponed."
+    )
+    for verdict in result.verdicts:
+        mark = "relevant    " if verdict.relevant else "not relevant"
+        print(f"  {mark} {verdict.candidate.text}  ({verdict.reason})")
+    if mode == "dev":
+        for draft in result.draft_list:
+            print(f"  draft for: {draft.text}")
+            print(f"    {draft.answer}")
+            print(f"    sources: {draft.source_urls}")
+    for warning in result.warnings:
+        print(f"  warning: {warning}")
+    return 0 if result.status == "completed" else 1
+
+
 async def _job_onboard(company_id: str | None, trigger: str, mode: str) -> int:
     assert company_id
     return await onboard_command(company_id, trigger)
@@ -108,6 +137,11 @@ async def _job_competitor(company_id: str | None, trigger: str, mode: str) -> in
     return await run_competitor_command(company_id, mode, trigger)
 
 
+async def _job_faq(company_id: str | None, trigger: str, mode: str) -> int:
+    assert company_id
+    return await run_faq_command(company_id, mode, trigger)
+
+
 @dataclass(frozen=True)
 class Job:
     handler: Handler | None  # None = not available yet
@@ -122,7 +156,7 @@ JOBS: dict[str, Job] = {
     "daily": Job(_job_daily, needs_company=False),
     "ax": Job(_job_ax),
     "competitor": Job(_job_competitor),
-    "faq": Job(None),  # D5.1
+    "faq": Job(_job_faq),
     "onboard": Job(_job_onboard),
 }
 

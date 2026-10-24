@@ -73,7 +73,18 @@ async def step_competitor(ctx: DailyContext) -> StepResult:
 
 
 async def step_faq(ctx: DailyContext) -> StepResult:
-    return StepResult("faq", "skipped", "not built yet (step D5.1)")
+    from app.agents.faq.graph import default_deps, run_faq
+
+    deps = default_deps()
+    try:
+        result = await run_faq(deps, ctx.company_id, mode=ctx.mode)
+    finally:
+        await deps.fetcher.aclose()
+    message = (
+        f"{result.new} new questions ({result.relevant} relevant), {result.drafts} drafts, "
+        f"{result.postponed} postponed"
+    )
+    return StepResult("faq", "partial" if result.postponed else "ok", message)
 
 
 async def step_alerts(ctx: DailyContext) -> StepResult:

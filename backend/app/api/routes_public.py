@@ -28,7 +28,9 @@ from app.schemas.api import (
     DetailsOut,
     EmailLogOut,
     EngineOut,
+    FaqDraftItem,
     PreviousAnswer,
+    PublicQuestionOut,
     QuestionOut,
     RunOut,
     ScoreOut,
@@ -390,6 +392,26 @@ async def alerts(
         )
         for a, q in rows
     ]
+
+
+@router.get(
+    "/companies/{company_id}/faq/questions",
+    response_model=list[PublicQuestionOut],
+    tags=["faq"],
+)
+async def faq_questions(company_id: str, session: Session) -> list[PublicQuestionOut]:
+    await company_or_404(session, company_id)
+    rows = await repo.public_questions(session, company_id)
+    return [PublicQuestionOut.model_validate(q, from_attributes=True) for q in rows]
+
+
+@router.get(
+    "/companies/{company_id}/faq/drafts", response_model=list[FaqDraftItem], tags=["faq"]
+)
+async def faq_drafts(company_id: str, session: Session) -> list[FaqDraftItem]:
+    await company_or_404(session, company_id)
+    rows = await repo.faq_drafts(session, company_id)
+    return [FaqDraftItem.model_validate(d, from_attributes=True) for d in rows]
 
 
 @router.get("/companies/{company_id}/runs", response_model=list[RunOut], tags=["runs"])

@@ -231,6 +231,23 @@ class CompetitorSummaryPoint(BaseModel):
     n_mentioned: int
 
 
+class PublicQuestionOut(BaseModel):
+    id: uuid.UUID
+    first_seen_at: datetime
+    source_url: str
+    text: str
+    relevant: bool | None = None
+    relevance_reason: str | None = None
+
+
+class FaqDraftItem(BaseModel):
+    id: uuid.UUID
+    created_at: datetime
+    question: str
+    answer: str
+    source_urls: list[str]
+
+
 # ---- admin -----------------------------------------------------------------------------------
 
 

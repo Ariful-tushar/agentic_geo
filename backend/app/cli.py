@@ -8,7 +8,13 @@ from pathlib import Path
 from app.agents.daily import daily_command
 from app.db.session import get_engine, get_sessionmaker
 from app.emails.commands import run_email_command
-from app.jobs.registry import JOBS, onboard_command, run_ax_command, run_competitor_command
+from app.jobs.registry import (
+    JOBS,
+    onboard_command,
+    run_ax_command,
+    run_competitor_command,
+    run_faq_command,
+)
 from app.loop import run
 from app.profiles.loader import ProfileError, import_profile, load_profile_file
 
@@ -125,6 +131,10 @@ def cmd_run_competitor(args: argparse.Namespace) -> int:
     return run(run_competitor_command(args.company, args.mode, args.trigger))
 
 
+def cmd_run_faq(args: argparse.Namespace) -> int:
+    return run(run_faq_command(args.company, args.mode, args.trigger))
+
+
 def cmd_send_report(args: argparse.Namespace) -> int:
     return run(run_email_command("report", args.company, args.mode, args.force))
 
@@ -192,6 +202,12 @@ def build_parser() -> argparse.ArgumentParser:
     comp.add_argument("--mode", choices=["live", "dev"], default="live")
     comp.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
     comp.set_defaults(func=cmd_run_competitor)
+
+    faq = sub.add_parser("run-faq", help="collect new public questions and draft FAQ answers")
+    faq.add_argument("--company", required=True)
+    faq.add_argument("--mode", choices=["live", "dev"], default="live")  # dev = print only
+    faq.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
+    faq.set_defaults(func=cmd_run_faq)
 
     job = sub.add_parser("job", help="run a job by name (used by the API and GitHub Actions)")
     job.add_argument("name", choices=sorted(JOBS))

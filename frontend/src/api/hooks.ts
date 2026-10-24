@@ -11,7 +11,9 @@ import type {
   DetailsOut,
   EmailLogOut,
   EngineOut,
+  FaqDraftItem,
   Health,
+  PublicQuestionOut,
   RunOut,
   TodayItem,
   TrendPoint,
@@ -114,3 +116,17 @@ export const useEmails = (id: string | null) => {
     enabled: id !== null,
   })
 }
+
+export const usePublicQuestions = (id: string | null) =>
+  useQuery({
+    queryKey: ['faq-questions', id],
+    queryFn: () => api.get<PublicQuestionOut[]>(`/api/companies/${id}/faq/questions`),
+    enabled: id !== null,
+  })
+
+export const useFaqDrafts = (id: string | null) =>
+  useQuery({
+    queryKey: ['faq-drafts', id],
+    queryFn: () => api.get<FaqDraftItem[]>(`/api/companies/${id}/faq/drafts`),
+    enabled: id !== null,
+  })

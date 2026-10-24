@@ -3,7 +3,7 @@
 import re
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 MAX_REPORT_CHARS = 500
 
@@ -126,3 +126,54 @@ class CompetitorReport(BaseModel):
         if len(re.findall(r"[.!?](?:\s|$)", value)) > 3:
             raise ValueError("the report must be at most 3 sentences")
         return value
+
+
+class ExtractedQuestions(BaseModel):
+    """Question sentences our AI found in the text of a page (fallback when no `.question`)."""
+
+    questions: list[str] = Field(default_factory=list)
+
+
+class RelevanceItem(BaseModel):
+    code: str
+    relevant: bool
+    reason: str = ""
+
+    @field_validator("reason")
+    @classmethod
+    def _short_reason(cls, value: str) -> str:
+        return " ".join(value.split()[:MAX_REASON_WORDS])
+
+
+class RelevanceVerdicts(BaseModel):
+    """Is each new public question about the company's industry, products or region?"""
+
+    items: list[RelevanceItem]
+
+
+MIN_DRAFT_WORDS = 60
+MAX_DRAFT_WORDS = 120
+
+
+class FaqDraftOut(BaseModel):
+    """A draft FAQ answer written only from the company's own information (SPEC 8.4)."""
+
+    answerable: bool
+    answer: str = ""
+    source_urls: list[str] = Field(default_factory=list)
+
+    @field_validator("answer")
+    @classmethod
+    def _tidy(cls, value: str) -> str:
+        return " ".join(value.split())
+
+    @model_validator(mode="after")
+    def _length(self) -> "FaqDraftOut":
+        if self.answerable:
+            words = len(self.answer.split())
+            if not MIN_DRAFT_WORDS <= words <= MAX_DRAFT_WORDS:
+                raise ValueError(
+                    f"the answer has {words} words, it must have {MIN_DRAFT_WORDS} to "
+                    f"{MAX_DRAFT_WORDS}"
+                )
+        return self

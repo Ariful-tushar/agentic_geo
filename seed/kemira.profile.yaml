@@ -13,7 +13,7 @@ contact_emails: ["YOUR_EMAIL@gmail.com"]        # change to the person who shoul
 monitoring_enabled: true
 emails_enabled: true
 faq_source_urls:
-  - "http://localhost:5173/demo/public-questions.html"   # change to the live Vercel URL on Day 5
+  - "https://answerwatch-jade.vercel.app/demo/public-questions.html"   # live demo page (local: http://localhost:5173/demo/public-questions.html)
 
 competitors:
   - name: Ecolab

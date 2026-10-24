@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Answer, Company, Question, Run
+from app.jobs import registry
 from tests.api_helpers import ADMIN, PASSWORD, Api, api, seeded  # noqa: F401
 from tests.email_helpers import RECIPIENTS, set_contacts
 from tests.kb_helpers import KEMIRA
@@ -119,7 +120,7 @@ def test_settings_reject_bad_emails_and_unknown_companies(api: Api) -> None:
 # ---- jobs ----------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("job", ["ax", "onboard", "competitor"])
+@pytest.mark.parametrize("job", ["ax", "onboard", "competitor", "faq"])
 def test_available_jobs_are_started_through_the_runner(api: Api, job: str) -> None:
     seeded(api)
     response = api.send("POST", "/api/companies/kemira/jobs", json={"job": job}, headers=ADMIN)
@@ -134,12 +135,14 @@ def test_available_jobs_are_started_through_the_runner(api: Api, job: str) -> No
     assert api.runner.started == [(job, "kemira")]
 
 
-@pytest.mark.parametrize("job", ["faq"])
-def test_jobs_that_are_not_built_yet_answer_501(api: Api, job: str) -> None:
+def test_jobs_that_are_not_built_yet_answer_501(
+    api: Api, monkeypatch: pytest.MonkeyPatch
+) -> None:
     seeded(api)
-    response = api.send("POST", "/api/companies/kemira/jobs", json={"job": job}, headers=ADMIN)
+    monkeypatch.setitem(registry.JOBS, "faq", registry.Job(None))  # as before step D5.1
+    response = api.send("POST", "/api/companies/kemira/jobs", json={"job": "faq"}, headers=ADMIN)
     assert response.status_code == 501
-    assert response.json()["detail"] == f"Job '{job}' is not available yet"
+    assert response.json()["detail"] == "Job 'faq' is not available yet"
     assert api.runner.started == []
 
 

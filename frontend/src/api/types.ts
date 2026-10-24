@@ -110,6 +110,23 @@ export interface CompetitorRef {
   rank: number
 }
 
+export interface PublicQuestionOut {
+  id: string
+  first_seen_at: string
+  source_url: string
+  text: string
+  relevant: boolean | null
+  relevance_reason: string | null
+}
+
+export interface FaqDraftItem {
+  id: string
+  created_at: string
+  question: string
+  answer: string
+  source_urls: string[]
+}
+
 export interface CompetitorEventOut {
   id: string
   run_date: string

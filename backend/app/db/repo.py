@@ -17,8 +17,10 @@ from app.db.models import (
     CompetitorEvent,
     DailyAccuracy,
     EmailLog,
+    FaqDraft,
     KnowledgeSource,
     Mention,
+    PublicQuestion,
     Question,
     Run,
     Score,
@@ -392,6 +394,25 @@ async def alerts_since(
         .order_by(Alert.run_date.desc(), Alert.severity, Question.code)
     )
     return [(a, q) for a, q in rows.all()]
+
+
+async def public_questions(session: AsyncSession, company_id: str) -> list[PublicQuestion]:
+    """Every public question found so far, newest first."""
+    stmt = (
+        select(PublicQuestion)
+        .where(PublicQuestion.company_id == company_id)
+        .order_by(PublicQuestion.first_seen_at.desc(), PublicQuestion.text)
+    )
+    return list((await session.scalars(stmt)).all())
+
+
+async def faq_drafts(session: AsyncSession, company_id: str) -> list[FaqDraft]:
+    stmt = (
+        select(FaqDraft)
+        .where(FaqDraft.company_id == company_id)
+        .order_by(FaqDraft.created_at.desc(), FaqDraft.question)
+    )
+    return list((await session.scalars(stmt)).all())
 
 
 async def competitor_events_since(

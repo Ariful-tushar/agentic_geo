@@ -8,7 +8,7 @@ blocks are never cached. A temporary failure never overwrites an earlier good co
 import asyncio
 import time
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from urllib.parse import urljoin, urlparse
@@ -47,6 +47,9 @@ class FetchResult:
     fetched_at: datetime | None = None
     from_cache: bool = False
     error: str | None = None
+    # Elements with class "question" (FAQ agent). Not stored in `pages`, so only a fresh download
+    # (force=True) has them.
+    questions: list[str] = field(default_factory=list)
 
 
 def _host(url: str) -> str:
@@ -177,6 +180,7 @@ class PoliteFetcher:
             text=page.text,
             published_date=page.published_date,
             date_kind=page.date_kind,
+            questions=page.questions,
             **base,
         )
 

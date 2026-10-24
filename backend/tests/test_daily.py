@@ -43,9 +43,24 @@ def test_the_default_order_is_ax_competitor_faq_alerts_report() -> None:
     assert names == ["ax", "competitor", "faq", "alerts", "report"]
 
 
-async def test_the_faq_stub_is_skipped_not_failed() -> None:
-    ctx = DailyContext("kemira", "dev", "manual")
-    assert (await daily.step_faq(ctx)).status == "skipped"
+async def test_the_faq_step_runs_the_faq_agent(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.agents.faq import graph
+
+    class Deps:
+        class fetcher:  # noqa: N801
+            @staticmethod
+            async def aclose() -> None:
+                return None
+
+    async def fake_run(deps: Any, company_id: str, *, mode: str) -> graph.FaqResult:
+        assert (company_id, mode) == ("kemira", "dev")
+        return graph.FaqResult(mode=mode, new=2, relevant=1, drafts=1)
+
+    monkeypatch.setattr(graph, "default_deps", lambda: Deps)
+    monkeypatch.setattr(graph, "run_faq", fake_run)
+    step = await daily.step_faq(DailyContext("kemira", "dev", "manual"))
+    assert (step.name, step.status) == ("faq", "ok")
+    assert "2 new questions (1 relevant), 1 drafts" in step.message
 
 
 async def test_one_failing_step_does_not_stop_the_others() -> None:

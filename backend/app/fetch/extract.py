@@ -2,7 +2,7 @@
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from email.utils import parsedate_to_datetime
 from typing import Any
@@ -23,6 +23,7 @@ class Extracted:
     text: str
     published_date: date | None
     date_kind: str | None  # "published" | "modified" | None
+    questions: list[str] = field(default_factory=list)  # text of elements with class "question"
 
 
 def _parse_date(value: Any) -> date | None:
@@ -96,14 +97,28 @@ def _clean(text: str | None) -> str | None:
     return cleaned or None
 
 
+def find_questions(tree: HTMLParser) -> list[str]:
+    """Text of every element with class `question` (the demo public-questions page, SPEC 8.4)."""
+    found = (_clean(node.text()) for node in tree.css(".question"))
+    return [text for text in found if text]
+
+
 def extract(html: str, last_modified: str | None = None) -> Extracted:
     tree = HTMLParser(html)
     title = _clean(tree.css_first("title").text()) if tree.css_first("title") else None
     h1 = _clean(tree.css_first("h1").text()) if tree.css_first("h1") else None
     published, kind = find_date(tree, last_modified)
+    questions = find_questions(tree)
 
     tree.strip_tags(_NOISE_TAGS)
     root = tree.css_first("main") or tree.css_first("article") or tree.body
     raw = root.text(separator="\n", strip=True) if root else ""
     text = _BLANK_LINES.sub("\n\n", raw).strip()
-    return Extracted(title=title, h1=h1, text=text, published_date=published, date_kind=kind)
+    return Extracted(
+        title=title,
+        h1=h1,
+        text=text,
+        published_date=published,
+        date_kind=kind,
+        questions=questions,
+    )

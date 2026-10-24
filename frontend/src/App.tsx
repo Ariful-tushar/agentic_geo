@@ -7,6 +7,7 @@ import About from '@/pages/About'
 import Accuracy from '@/pages/Accuracy'
 import Alerts from '@/pages/Alerts'
 import Competitors from '@/pages/Competitors'
+import Faq from '@/pages/Faq'
 import Overview from '@/pages/Overview'
 import Placeholder from '@/pages/Placeholder'
 import Settings from '@/pages/Settings'
@@ -17,7 +18,6 @@ const queryClient = new QueryClient({
 })
 
 const LATER_PAGES = [
-  { path: 'faq', title: 'FAQ', step: 'D5.1' },
   { path: 'readiness', title: 'AI-readiness', step: 'D5.2' },
 ]
 
@@ -34,6 +34,7 @@ export default function App() {
                 <Route path="accuracy" element={<Accuracy />} />
                 <Route path="competitors" element={<Competitors />} />
                 <Route path="alerts" element={<Alerts />} />
+                <Route path="faq" element={<Faq />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="setup" element={<Setup />} />
                 {LATER_PAGES.map(({ path, title, step }) => (
