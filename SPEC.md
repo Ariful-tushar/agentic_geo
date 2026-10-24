@@ -49,7 +49,7 @@ Kemira is the first profile. The product works for any company: each company is 
 | Wikipedia | Wikipedia REST/Action API (free, official) | For "why" checks when an answer has no citations |
 | Frontend | React + Vite + TypeScript, Tailwind + shadcn/ui, Recharts, TanStack Query, React Router | |
 | Email | Gmail SMTP with an app password (`smtplib` / `aiosmtplib`) | 500 recipients/day limit |
-| Scheduler | GitHub Actions (`schedule` + `workflow_dispatch`) | Daily ~07:15 Europe/Helsinki |
+| Scheduler | GitHub Actions (`schedule` + `workflow_dispatch`) | FAQ source hourly; daily agents ~07:15 Europe/Helsinki |
 | Hosting | Vercel (frontend), Render free web service (API, Docker), Neon (DB) | All free, no card |
 | Local dev | Docker Compose (db always; api + web optional) | Docker Desktop with WSL 2 on Windows |
 | Quality | pytest, pytest-asyncio, ruff | Tests never call real AI APIs |
@@ -71,7 +71,7 @@ OPENROUTER_MEMORY_MODEL=nvidia/nemotron-3.5-super-vl:free   # optional tested en
 ## 3. Architecture
 
 ```
-           GitHub Actions  (daily ~07:15 Helsinki, and "run now" via workflow_dispatch)
+           GitHub Actions  (FAQ source hourly, daily agents ~07:15 Helsinki, and "run now")
                  │  runs:  python -m app.cli daily | onboard | run-ax | run-competitor | run-faq
                  ▼
    ┌───────────────────────── Agents (LangGraph) ─────────────────────────┐
@@ -308,7 +308,11 @@ For each `competitor_events` row with status `new`:
 
 ### 8.4 FAQ agent (`run-faq --company <id>`)
 
-1. Fetch each `faq_source_urls` page (force refresh, polite).
+The configured live pages are the discovery source. The database keeps discovered questions,
+their relevance decisions, and drafts so scans can deduplicate and the dashboard can show history;
+it is not used instead of fetching the configured pages.
+1. Fetch each `faq_source_urls` page (force refresh, polite). The workflow checks the configured
+   Kemira page hourly; an admin can also start a scan from the FAQ dashboard.
 2. Extract questions: elements with class `question` (demo page); fallback: our AI extracts question sentences from the text.
 3. Normalise (lowercase, trim, remove punctuation) and skip questions already stored; also skip near-duplicates (embedding similarity > 0.92).
 4. Relevance (one AI call for all new questions): is it related to the company's industry, products or region? Store `relevant` + reason.
@@ -377,7 +381,7 @@ All responses are Pydantic models. CORS allows `FRONTEND_ORIGIN`. Errors are cle
 | **Accuracy details** | Engine tabs. Table: rows = fact questions, columns = days, cells coloured (green 1, amber 0.5, red 0, grey no answer or error). Click a cell → side panel: question, expected answer, the AI's answer, verdict and reason, quote, citations (links), **why** finding and suggested fix, previous day's answer side by side. |
 | **Competitors** | Small chart: company mentioned in X of N generic answers per day, per engine. History table: date, engine, question, who was ahead or "company not mentioned", and the competitor agent's 2 to 3 line report (or "Nothing found by the competitor monitor"). |
 | **Alerts** | List of change alerts; click → yesterday's and today's answer side by side. |
-| **FAQ** | Section 1: public questions found (date, source, relevant yes/no, reason). Section 2: FAQ drafts (question, answer, sources) with a Copy button. |
+| **FAQ** | Public questions found (date, source, relevant yes/no, reason); admins can start a live-source scan, and anyone can refresh saved results. FAQ drafts show question, answer and sources with a Copy button. |
 | **AI-readiness** | Admin: enter a URL → run check → result: X of N answered, per-question table (answered / partly / missing), missing facts, 3 suggestions. History list. |
 | **Settings** | Monitoring switch, emails switch, contact emails, competitors and questions (read-only), knowledge sources and their status, last runs, last emails, "Send test email". |
 | **Setup** (admin) | Create a profile: form (name, aliases, domains, Wikipedia title, emails, competitors, knowledge source URLs, fact questions with expected answers, generic questions, FAQ source URLs) **or** "Import YAML". After saving: onboarding status ("Building knowledge base…", then "Ready"). |
@@ -499,6 +503,8 @@ volumes: { dbdata: {} }
 name: agents
 on:
   schedule:
+    - cron: "0 * * * *"      # run only the FAQ job for Kemira; local Helsinki time
+      timezone: "Europe/Helsinki"
     - cron: "15 7 * * *"
       timezone: "Europe/Helsinki"   # if GitHub rejects this field, use "15 5 * * *" (UTC, winter time)
   workflow_dispatch:

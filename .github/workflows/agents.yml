@@ -6,8 +6,9 @@ on:
     paths:
       - frontend/public/demo/public-questions.html
   schedule:
-    # 07:15 Helsinki time all year (GitHub docs: workflow syntax, `on.schedule` supports `timezone`).
-    # Scheduled runs can start 5 to 30 minutes late.
+    # Check the live FAQ source hourly; the daily workflow still runs at 07:15 Helsinki time.
+    - cron: "0 * * * *"
+      timezone: "Europe/Helsinki"
     - cron: "15 7 * * *"
       timezone: "Europe/Helsinki"
   workflow_dispatch:
@@ -21,7 +22,7 @@ on:
         required: false
         default: ""
 concurrency:
-  group: agents-${{ github.event.inputs.company || 'all' }}
+  group: agents-${{ github.event_name == 'schedule' && 'scheduled' || github.event.inputs.company || 'all' }}
   cancel-in-progress: false
 jobs:
   run:
@@ -54,8 +55,8 @@ jobs:
           if [ -n "$COMPANY" ]; then args+=(--company "$COMPANY"); fi
           uv run --project backend --frozen python -m app.cli "${args[@]}"
         env:
-          JOB: ${{ github.event_name == 'push' && 'faq' || github.event.inputs.job || 'daily' }}
-          COMPANY: ${{ github.event_name == 'push' && 'kemira' || github.event.inputs.company }}
+          JOB: ${{ github.event_name == 'push' && 'faq' || (github.event_name == 'schedule' && github.event.schedule == '0 * * * *' && 'faq') || github.event.inputs.job || 'daily' }}
+          COMPANY: ${{ github.event_name == 'push' && 'kemira' || (github.event_name == 'schedule' && github.event.schedule == '0 * * * *' && 'kemira') || github.event.inputs.company }}
           TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

@@ -119,6 +119,10 @@ export interface PublicQuestionOut {
   relevance_reason: string | null
 }
 
+export interface PublicQuestionInput {
+  text: string
+}
+
 export interface FaqDraftItem {
   id: string
   created_at: string

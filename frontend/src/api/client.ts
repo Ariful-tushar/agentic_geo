@@ -1,6 +1,8 @@
 import type {
   CompanyCreated,
   JobStartOut,
+  PublicQuestionInput,
+  PublicQuestionOut,
   ProfileInput,
   SettingsOut,
   TestEmailOut,
@@ -70,6 +72,15 @@ export const api = {
     request<JobStartOut>(`/api/companies/${companyId}/jobs`, {
       method: 'POST',
       body: JSON.stringify({ job }),
+    }),
+  addFaqQuestion: (companyId: string, question: PublicQuestionInput) =>
+    request<PublicQuestionOut>(`/api/companies/${companyId}/faq/questions`, {
+      method: 'POST',
+      body: JSON.stringify(question),
+    }),
+  deleteFaqQuestion: (companyId: string, questionId: string) =>
+    request<PublicQuestionOut>(`/api/companies/${companyId}/faq/questions/${questionId}`, {
+      method: 'DELETE',
     }),
   patchSettings: (
     companyId: string,

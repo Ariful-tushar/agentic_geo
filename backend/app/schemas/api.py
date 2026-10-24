@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.schemas.profile import ProfileIn
 
@@ -238,6 +238,12 @@ class PublicQuestionOut(BaseModel):
     text: str
     relevant: bool | None = None
     relevance_reason: str | None = None
+
+
+class PublicQuestionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    text: str = Field(min_length=10, max_length=300)
 
 
 class FaqDraftItem(BaseModel):

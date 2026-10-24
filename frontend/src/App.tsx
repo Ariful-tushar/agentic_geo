@@ -6,6 +6,7 @@ import { CompanyProvider } from '@/lib/company'
 import About from '@/pages/About'
 import Accuracy from '@/pages/Accuracy'
 import Alerts from '@/pages/Alerts'
+import AddQuestion from '@/pages/AddQuestion'
 import Competitors from '@/pages/Competitors'
 import Faq from '@/pages/Faq'
 import Overview from '@/pages/Overview'
@@ -35,6 +36,7 @@ export default function App() {
                 <Route path="competitors" element={<Competitors />} />
                 <Route path="alerts" element={<Alerts />} />
                 <Route path="faq" element={<Faq />} />
+                <Route path="add-question" element={<AddQuestion />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="setup" element={<Setup />} />
                 {LATER_PAGES.map(({ path, title, step }) => (

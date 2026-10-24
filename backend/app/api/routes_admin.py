@@ -1,15 +1,19 @@
 """Write endpoints (SPEC 9). Everything except the login check needs the `X-Admin-Token` header."""
 
 import asyncio
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.faq.text import normalise_question
 from app.api.auth import is_admin, require_admin
 from app.api.deps import get_email_sender
 from app.api.routes_public import company_or_404
-from app.db.models import Company
+from app.db.models import Company, PublicQuestion
 from app.db.session import get_session
 from app.emails.commands import send_test_email
 from app.emails.smtp import Sender
@@ -31,6 +35,8 @@ from app.schemas.api import (
     JobStartOut,
     LoginIn,
     LoginOut,
+    PublicQuestionIn,
+    PublicQuestionOut,
     SettingsIn,
     SettingsOut,
     TestEmailOut,
@@ -103,6 +109,63 @@ async def start_company_job(
     """Starts a job (ax, onboard, ...) through the JobRunner. 202 = started, not finished."""
     await company_or_404(session, company_id)
     return await start_or_http_error(session, runner, body.job, company_id)
+
+
+@router.post(
+    "/companies/{company_id}/faq/questions",
+    response_model=PublicQuestionOut,
+    status_code=201,
+    dependencies=[Admin],
+)
+async def add_faq_question(
+    company_id: str, body: PublicQuestionIn, session: Session
+) -> PublicQuestionOut:
+    """Save an admin-submitted FAQ question so the FAQ job can draft an answer."""
+    await company_or_404(session, company_id)
+    normalized = normalise_question(body.text)
+    statement = (
+        insert(PublicQuestion)
+        .values(
+            company_id=company_id,
+            source_url="Added from dashboard",
+            text=body.text,
+            normalized=normalized,
+            relevant=True,
+            relevance_reason="Added manually from the dashboard.",
+        )
+        .on_conflict_do_nothing(index_elements=["company_id", "normalized"])
+        .returning(PublicQuestion)
+    )
+    question = (await session.scalars(statement)).first()
+    if question is None:
+        raise HTTPException(409, "This question has already been added.")
+    await session.commit()
+    await session.refresh(question)
+    return PublicQuestionOut.model_validate(question, from_attributes=True)
+
+
+@router.delete(
+    "/companies/{company_id}/faq/questions/{question_id}",
+    response_model=PublicQuestionOut,
+    dependencies=[Admin],
+)
+async def delete_faq_question(
+    company_id: str, question_id: uuid.UUID, session: Session
+) -> PublicQuestionOut:
+    """Delete a saved FAQ question and its database-cascaded draft."""
+    await company_or_404(session, company_id)
+    question = await session.scalar(
+        select(PublicQuestion).where(
+            PublicQuestion.id == question_id,
+            PublicQuestion.company_id == company_id,
+        )
+    )
+    if question is None:
+        raise HTTPException(404, "FAQ question not found")
+    response = PublicQuestionOut.model_validate(question, from_attributes=True)
+    await session.delete(question)
+    await session.commit()
+    return response
 
 
 @router.post(

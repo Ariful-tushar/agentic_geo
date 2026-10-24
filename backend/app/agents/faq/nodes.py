@@ -12,8 +12,6 @@ is written to `public_questions` or `faq_drafts`; the results stay in the state 
 import json
 import logging
 import operator
-import re
-import unicodedata
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -25,6 +23,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.agents.ax.why import temporary_failure
+from app.agents.faq.text import normalise_question
 from app.db.models import Company, FaqDraft, PublicQuestion, Question
 from app.kb.retriever import KnowledgeBaseEmpty
 from app.llm.internal import InternalAIError
@@ -97,13 +96,6 @@ class FaqDeps:
 
 
 # ---- plain helpers (no AI, no database) ------------------------------------------------------
-
-
-def normalise_question(text: str) -> str:
-    """Lowercase, trim, remove punctuation (SPEC 8.4 step 3)."""
-    text = unicodedata.normalize("NFKC", text).casefold()
-    text = re.sub(r"[^\w\s]", " ", text)
-    return " ".join(text.split())
 
 
 def clean_question(text: str) -> str | None:
