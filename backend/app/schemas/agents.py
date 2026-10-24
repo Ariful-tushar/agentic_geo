@@ -177,3 +177,30 @@ class FaqDraftOut(BaseModel):
                     f"{MAX_DRAFT_WORDS}"
                 )
         return self
+
+
+class ReadinessAnswer(BaseModel):
+    code: str
+    answer: str
+    evidence_quote: str = ""
+
+    @field_validator("answer")
+    @classmethod
+    def _tidy_answer(cls, value: str) -> str:
+        value = " ".join(value.split())
+        if not value:
+            raise ValueError("the answer is empty")
+        return value
+
+
+class ReadinessAnalysis(BaseModel):
+    answers: list[ReadinessAnswer]
+    suggestions: list[str] = Field(min_length=3, max_length=3)
+
+    @field_validator("suggestions")
+    @classmethod
+    def _tidy_suggestions(cls, values: list[str]) -> list[str]:
+        suggestions = [" ".join(value.split()) for value in values]
+        if any(not suggestion for suggestion in suggestions):
+            raise ValueError("suggestions must not be empty")
+        return suggestions

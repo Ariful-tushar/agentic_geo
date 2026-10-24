@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ApiError, api } from '@/api/client'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,6 @@ import { useAdmin } from '@/lib/admin'
 export default function AddQuestion() {
   const { companyId, isLoading: companiesLoading } = useSelectedCompany()
   const { isAdmin, openLogin } = useAdmin()
-  const queryClient = useQueryClient()
   const [questionText, setQuestionText] = useState('')
 
   const addQuestion = useMutation({
@@ -21,19 +20,9 @@ export default function AddQuestion() {
       if (!companyId) throw new Error('Select a company before adding a question.')
       return api.addFaqQuestion(companyId, { text: questionText })
     },
-    onSuccess: async () => {
+    onSuccess: (result) => {
       setQuestionText('')
-      await queryClient.invalidateQueries({ queryKey: ['faq-questions', companyId] })
-      toast.success('Question added. Starting the FAQ draft job…')
-      try {
-        if (!companyId) throw new Error('Select a company before starting the FAQ job.')
-        await api.startJob(companyId, 'faq')
-        await queryClient.invalidateQueries({ queryKey: ['faq-drafts', companyId] })
-        toast.success('FAQ job started. Drafts will appear when it finishes.')
-      } catch (error) {
-        const message = error instanceof ApiError ? error.message : 'Could not reach the API.'
-        toast.error(`Question saved, but the FAQ job could not be started: ${message}`)
-      }
+      toast.success(result.detail)
     },
     onError: (error) => {
       const message = error instanceof ApiError ? error.message : 'Could not reach the API.'
@@ -49,8 +38,8 @@ export default function AddQuestion() {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Add a question</h1>
         <p className="text-sm text-muted-foreground">
-          Add a public question for the selected company. The FAQ agent will try to draft an answer
-          using the company’s own sources.
+          Submit a question to the public source page. It will appear in FAQ results only after the
+          hourly scan finds it and the FAQ agent checks whether it is relevant.
         </p>
       </div>
 
@@ -78,7 +67,8 @@ export default function AddQuestion() {
                 disabled={!isAdmin || addQuestion.isPending}
               />
               <p className="text-xs text-muted-foreground">
-                Use 10–300 characters. Similar questions can only be added once.
+                Use 10–300 characters. The source page update is queued through GitHub Actions;
+                FAQ results update after a later scan, not immediately.
               </p>
             </div>
             {isAdmin ? (

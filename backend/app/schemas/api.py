@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
 
 from app.schemas.profile import ProfileIn
 
@@ -246,12 +246,56 @@ class PublicQuestionIn(BaseModel):
     text: str = Field(min_length=10, max_length=300)
 
 
+class FaqSourceUpdateOut(BaseModel):
+    status: Literal["queued"]
+    workflow: str
+    detail: str
+
+
 class FaqDraftItem(BaseModel):
     id: uuid.UUID
     created_at: datetime
     question: str
     answer: str
     source_urls: list[str]
+
+
+class ReadinessCheckIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    url: HttpUrl
+
+
+class ReadinessFactResult(BaseModel):
+    code: str
+    question: str
+    answer: str
+    verdict: Literal["correct", "partial", "wrong", "no_answer"]
+    reason: str
+    quote: str | None
+    quote_verified: bool
+
+
+class ReadinessMissingFact(BaseModel):
+    code: str
+    question: str
+    expected_answer: str
+    verdict: Literal["wrong", "no_answer"]
+
+
+class ReadinessCheckOut(BaseModel):
+    id: uuid.UUID
+    company_id: str
+    url: str
+    status: Literal["queued", "running", "done", "failed"]
+    n_questions: int | None
+    n_answered: int | None
+    n_partial: int | None
+    results: list[ReadinessFactResult] | None
+    missing: list[ReadinessMissingFact] | None
+    suggestions: list[str] | None
+    error: str | None
+    created_at: datetime
 
 
 # ---- admin -----------------------------------------------------------------------------------

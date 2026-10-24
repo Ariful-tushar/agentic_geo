@@ -6,6 +6,7 @@ mapping from job name to code lives here and nowhere else. A job without a handl
 available yet; the step that builds it fills in its handler.
 """
 
+import sys
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
@@ -114,6 +115,38 @@ async def run_faq_command(company_id: str, mode: str = "live", trigger: str = "m
     for warning in result.warnings:
         print(f"  warning: {warning}")
     return 0 if result.status == "completed" else 1
+
+
+async def readiness_command(company_id: str, url: str) -> int:
+    from app.agents.support.graph import default_deps, run_readiness
+    from app.db import repo
+    from app.db.models import Company
+
+    deps = default_deps()
+    try:
+        async with deps["sessionmaker"]() as session:
+            company = await session.get(Company, company_id)
+            if company is None:
+                print(f"Company '{company_id}' was not found.", file=sys.stderr)
+                return 1
+            check = await repo.create_readiness_check(session, company_id, url)
+        result = await run_readiness(deps, check.id)
+    finally:
+        await deps["fetcher"].aclose()
+        await get_engine().dispose()
+    print(f"AI-readiness check {result.status}: {result.id}")
+    if result.status == "failed":
+        print(f"  error: {result.error}", file=sys.stderr)
+        return 1
+    print(
+        f"  {result.n_answered} of {result.n_questions} fact questions fully answered; "
+        f"{result.n_partial} partly answered."
+    )
+    for missing in result.missing or []:
+        print(f"  missing: {missing['question']} (expected: {missing['expected_answer']})")
+    for index, suggestion in enumerate(result.suggestions or [], start=1):
+        print(f"  suggestion {index}: {suggestion}")
+    return 0
 
 
 async def _job_onboard(company_id: str | None, trigger: str, mode: str) -> int:

@@ -14,6 +14,7 @@ import type {
   FaqDraftItem,
   Health,
   PublicQuestionOut,
+  ReadinessCheckOut,
   RunOut,
   TodayItem,
   TrendPoint,
@@ -129,4 +130,20 @@ export const useFaqDrafts = (id: string | null) =>
     queryKey: ['faq-drafts', id],
     queryFn: () => api.get<FaqDraftItem[]>(`/api/companies/${id}/faq/drafts`),
     enabled: id !== null,
+  })
+
+export const useReadinessHistory = (id: string | null) =>
+  useQuery({
+    queryKey: ['readiness-history', id],
+    queryFn: () => api.get<ReadinessCheckOut[]>(`/api/companies/${id}/readiness`),
+    enabled: id !== null,
+  })
+
+export const useReadinessCheck = (checkId: string | null) =>
+  useQuery({
+    queryKey: ['readiness-check', checkId],
+    queryFn: () => api.get<ReadinessCheckOut>(`/api/readiness/${checkId}`),
+    enabled: checkId !== null,
+    refetchInterval: (query) =>
+      ['queued', 'running'].includes(query.state.data?.status ?? '') ? 2000 : false,
   })

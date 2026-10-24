@@ -1,9 +1,12 @@
 import type {
   CompanyCreated,
+  FaqSourceUpdateOut,
   JobStartOut,
   PublicQuestionInput,
   PublicQuestionOut,
   ProfileInput,
+  ReadinessCheckInput,
+  ReadinessCheckOut,
   SettingsOut,
   TestEmailOut,
 } from './types'
@@ -74,13 +77,18 @@ export const api = {
       body: JSON.stringify({ job }),
     }),
   addFaqQuestion: (companyId: string, question: PublicQuestionInput) =>
-    request<PublicQuestionOut>(`/api/companies/${companyId}/faq/questions`, {
+    request<FaqSourceUpdateOut>(`/api/companies/${companyId}/faq/questions`, {
       method: 'POST',
       body: JSON.stringify(question),
     }),
   deleteFaqQuestion: (companyId: string, questionId: string) =>
     request<PublicQuestionOut>(`/api/companies/${companyId}/faq/questions/${questionId}`, {
       method: 'DELETE',
+    }),
+  startReadinessCheck: (companyId: string, input: ReadinessCheckInput) =>
+    request<ReadinessCheckOut>(`/api/companies/${companyId}/readiness`, {
+      method: 'POST',
+      body: JSON.stringify(input),
     }),
   patchSettings: (
     companyId: string,

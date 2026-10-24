@@ -11,6 +11,7 @@ from app.emails.commands import run_email_command
 from app.jobs.registry import (
     JOBS,
     onboard_command,
+    readiness_command,
     run_ax_command,
     run_competitor_command,
     run_faq_command,
@@ -135,6 +136,10 @@ def cmd_run_faq(args: argparse.Namespace) -> int:
     return run(run_faq_command(args.company, args.mode, args.trigger))
 
 
+def cmd_readiness(args: argparse.Namespace) -> int:
+    return run(readiness_command(args.company, args.url))
+
+
 def cmd_send_report(args: argparse.Namespace) -> int:
     return run(run_email_command("report", args.company, args.mode, args.force))
 
@@ -208,6 +213,11 @@ def build_parser() -> argparse.ArgumentParser:
     faq.add_argument("--mode", choices=["live", "dev"], default="live")  # dev = print only
     faq.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
     faq.set_defaults(func=cmd_run_faq)
+
+    readiness = sub.add_parser("readiness", help="check a page for AI-readiness")
+    readiness.add_argument("--company", required=True)
+    readiness.add_argument("url")
+    readiness.set_defaults(func=cmd_readiness)
 
     job = sub.add_parser("job", help="run a job by name (used by the API and GitHub Actions)")
     job.add_argument("name", choices=sorted(JOBS))

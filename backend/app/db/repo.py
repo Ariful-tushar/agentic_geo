@@ -22,6 +22,7 @@ from app.db.models import (
     Mention,
     PublicQuestion,
     Question,
+    ReadinessCheck,
     Run,
     Score,
     WhyFinding,
@@ -413,6 +414,30 @@ async def faq_drafts(session: AsyncSession, company_id: str) -> list[FaqDraft]:
         .order_by(FaqDraft.created_at.desc(), FaqDraft.question)
     )
     return list((await session.scalars(stmt)).all())
+
+
+async def create_readiness_check(
+    session: AsyncSession, company_id: str, url: str
+) -> ReadinessCheck:
+    check = ReadinessCheck(company_id=company_id, url=url, status="queued")
+    session.add(check)
+    await session.commit()
+    await session.refresh(check)
+    return check
+
+
+async def readiness_checks(session: AsyncSession, company_id: str) -> list[ReadinessCheck]:
+    stmt = (
+        select(ReadinessCheck)
+        .where(ReadinessCheck.company_id == company_id)
+        .order_by(ReadinessCheck.created_at.desc())
+        .limit(50)
+    )
+    return list((await session.scalars(stmt)).all())
+
+
+async def readiness_check(session: AsyncSession, check_id: uuid.UUID) -> ReadinessCheck | None:
+    return await session.get(ReadinessCheck, check_id)
 
 
 async def competitor_events_since(

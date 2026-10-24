@@ -123,12 +123,54 @@ export interface PublicQuestionInput {
   text: string
 }
 
+export interface FaqSourceUpdateOut {
+  status: 'queued'
+  workflow: string
+  detail: string
+}
+
 export interface FaqDraftItem {
   id: string
   created_at: string
   question: string
   answer: string
   source_urls: string[]
+}
+
+export interface ReadinessCheckInput {
+  url: string
+}
+
+export interface ReadinessFactResult {
+  code: string
+  question: string
+  answer: string
+  verdict: 'correct' | 'partial' | 'wrong' | 'no_answer'
+  reason: string
+  quote: string | null
+  quote_verified: boolean
+}
+
+export interface ReadinessMissingFact {
+  code: string
+  question: string
+  expected_answer: string
+  verdict: 'wrong' | 'no_answer'
+}
+
+export interface ReadinessCheckOut {
+  id: string
+  company_id: string
+  url: string
+  status: 'queued' | 'running' | 'done' | 'failed'
+  n_questions: number | null
+  n_answered: number | null
+  n_partial: number | null
+  results: ReadinessFactResult[] | null
+  missing: ReadinessMissingFact[] | null
+  suggestions: string[] | null
+  error: string | null
+  created_at: string
 }
 
 export interface CompetitorEventOut {

@@ -32,6 +32,7 @@ from app.schemas.api import (
     PreviousAnswer,
     PublicQuestionOut,
     QuestionOut,
+    ReadinessCheckOut,
     RunOut,
     ScoreOut,
     SourceOut,
@@ -412,6 +413,25 @@ async def faq_drafts(company_id: str, session: Session) -> list[FaqDraftItem]:
     await company_or_404(session, company_id)
     rows = await repo.faq_drafts(session, company_id)
     return [FaqDraftItem.model_validate(d, from_attributes=True) for d in rows]
+
+
+@router.get(
+    "/companies/{company_id}/readiness",
+    response_model=list[ReadinessCheckOut],
+    tags=["readiness"],
+)
+async def readiness_history(company_id: str, session: Session) -> list[ReadinessCheckOut]:
+    await company_or_404(session, company_id)
+    rows = await repo.readiness_checks(session, company_id)
+    return [ReadinessCheckOut.model_validate(check, from_attributes=True) for check in rows]
+
+
+@router.get("/readiness/{check_id}", response_model=ReadinessCheckOut, tags=["readiness"])
+async def readiness_status(check_id: uuid.UUID, session: Session) -> ReadinessCheckOut:
+    check = await repo.readiness_check(session, check_id)
+    if check is None:
+        raise HTTPException(404, f"Readiness check '{check_id}' was not found")
+    return ReadinessCheckOut.model_validate(check, from_attributes=True)
 
 
 @router.get("/companies/{company_id}/runs", response_model=list[RunOut], tags=["runs"])

@@ -318,9 +318,17 @@ it is not used instead of fetching the configured pages.
 4. Relevance (one AI call for all new questions): is it related to the company's industry, products or region? Store `relevant` + reason.
 5. For relevant new questions: draft an FAQ answer (60 to 120 words) using **only** RAG chunks and the company's expected answers, mention the company naturally, list source URLs. Store in `faq_drafts`.
 
+Admins add questions through `/add-question`. The API does not save them to the FAQ database or
+mark them relevant. It queues a GitHub workflow that safely adds the question to the configured
+demo HTML source page and commits the change; Vercel deploys that page. The hourly FAQ scan then
+discovers the question and checks relevance. A relevant question may still have no draft when the
+company's indexed sources cannot support a grounded answer or the answer fails source validation.
+
 ### 8.5 Support agent: AI-readiness check (on demand)
 
-Input: a page URL (admin). Runs as an API background task; the UI polls the status.
+Input: a page URL (admin). `POST /api/companies/{id}/readiness` creates a check and runs it as an
+API background task; the UI polls `GET /api/readiness/{id}` and can load history from
+`GET /api/companies/{id}/readiness`.
 1. Fetch the page (force refresh).
 2. One AI call: answer every fact question using **only** this page's text, or "not on this page".
 3. Score those answers with the same judge logic as Ax.
@@ -355,8 +363,10 @@ Read endpoints are public. Write endpoints need header `X-Admin-Token` equal to 
 | GET | `/api/companies/{id}/alerts?days` | alerts with before/after answer ids |
 | GET | `/api/companies/{id}/faq/questions` | public questions found (history) |
 | GET | `/api/companies/{id}/faq/drafts` | FAQ drafts |
+| POST | `/api/companies/{id}/faq/questions` | admin-only; queue a question on the configured source page (202) |
 | GET | `/api/companies/{id}/readiness` | readiness check history |
 | GET | `/api/readiness/{id}` | one check with results |
+| POST | `/api/companies/{id}/readiness` | start an admin-only AI-readiness check for a page URL (202 queued) |
 | GET | `/api/companies/{id}/runs?limit=20` | recent runs with status |
 | GET | `/api/companies/{id}/emails?limit=20` | email log |
 | POST | `/api/admin/login` | checks the password |

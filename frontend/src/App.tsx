@@ -11,16 +11,13 @@ import Competitors from '@/pages/Competitors'
 import Faq from '@/pages/Faq'
 import Overview from '@/pages/Overview'
 import Placeholder from '@/pages/Placeholder'
+import Readiness from '@/pages/Readiness'
 import Settings from '@/pages/Settings'
 import Setup from '@/pages/Setup'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
 })
-
-const LATER_PAGES = [
-  { path: 'readiness', title: 'AI-readiness', step: 'D5.2' },
-]
 
 export default function App() {
   return (
@@ -37,11 +34,9 @@ export default function App() {
                 <Route path="alerts" element={<Alerts />} />
                 <Route path="faq" element={<Faq />} />
                 <Route path="add-question" element={<AddQuestion />} />
+                <Route path="readiness" element={<Readiness />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="setup" element={<Setup />} />
-                {LATER_PAGES.map(({ path, title, step }) => (
-                  <Route key={path} path={path} element={<Placeholder title={title} step={step} />} />
-                ))}
                 <Route path="*" element={<Placeholder title="Page not found" step="?" />} />
               </Route>
             </Routes>

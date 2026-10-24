@@ -1,0 +1,44 @@
+name: Update demo FAQ source page
+
+on:
+  workflow_dispatch:
+    inputs:
+      company:
+        description: Company profile id
+        required: true
+        type: string
+      question:
+        description: Question to add to the public source page
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-demo-faq-source
+  cancel-in-progress: false
+
+jobs:
+  update-source:
+    if: inputs.company == 'kemira'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.1
+      - run: uv sync --project backend --frozen
+      - name: Add question to the source HTML
+        env:
+          FAQ_QUESTION: ${{ inputs.question }}
+        run: uv run --project backend --frozen python -m app.faq_source
+      - name: Commit the updated source page
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/public/demo/public-questions.html
+          if git diff --cached --quiet; then
+            echo "The question was already present; no commit is needed."
+          else
+            git commit -m "faq: add public question"
+            git push
+          fi

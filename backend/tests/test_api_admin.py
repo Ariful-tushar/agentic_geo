@@ -1,12 +1,12 @@
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
-from uuid import UUID
 
 import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Answer, Company, FaqDraft, Question, Run
+from app.agents.faq.text import normalise_question
+from app.db.models import Answer, Company, FaqDraft, PublicQuestion, Question, Run
 from app.jobs import registry
 from tests.api_helpers import ADMIN, PASSWORD, Api, api, seeded  # noqa: F401
 from tests.email_helpers import RECIPIENTS, set_contacts
@@ -153,8 +153,19 @@ def test_jobs_that_are_not_built_yet_answer_501(
     assert api.runner.started == []
 
 
-def test_add_faq_question_saves_an_admin_submitted_question(api: Api) -> None:
+def test_add_faq_question_queues_a_source_page_update(
+    api: Api, monkeypatch: pytest.MonkeyPatch
+) -> None:
     seeded(api)
+    dispatched: list[tuple[str, str]] = []
+
+    async def fake_dispatch(company_id: str, question: str) -> str:
+        dispatched.append((company_id, question))
+        return "update-faq-source.yml"
+
+    from app.api import routes_admin
+
+    monkeypatch.setattr(routes_admin, "dispatch_faq_source_update", fake_dispatch)
     response = api.send(
         "POST",
         "/api/companies/kemira/faq/questions",
@@ -162,13 +173,32 @@ def test_add_faq_question_saves_an_admin_submitted_question(api: Api) -> None:
         headers=ADMIN,
     )
 
-    assert response.status_code == 201
-    question = response.json()
-    assert question["text"] == "How can water reuse help?"
-    assert question["source_url"] == "Added from dashboard"
-    assert question["relevant"] is True
-    assert question["relevance_reason"] == "Added manually from the dashboard."
-    assert api.get("/api/companies/kemira/faq/questions").json()[0]["id"] == question["id"]
+    assert response.status_code == 202
+    assert response.json()["status"] == "queued"
+    assert dispatched == [("kemira", "How can water reuse help?")]
+    assert api.get("/api/companies/kemira/faq/questions").json() == []
+    assert api.runner.started == []
+
+
+def test_add_faq_question_requires_the_configured_demo_source_page(api: Api) -> None:
+    seeded(api)
+
+    async def clear_source(session: AsyncSession) -> None:
+        company = await session.get(Company, "kemira")
+        assert company is not None
+        company.faq_source_urls = []
+        await session.commit()
+
+    api.with_session(clear_source)
+    response = api.send(
+        "POST",
+        "/api/companies/kemira/faq/questions",
+        json={"text": "How can water reuse help?"},
+        headers=ADMIN,
+    )
+
+    assert response.status_code == 409
+    assert api.get("/api/companies/kemira/faq/questions").json() == []
 
 
 @pytest.mark.parametrize("text", ["short", "x" * 301])
@@ -183,44 +213,34 @@ def test_add_faq_question_validates_length(api: Api, text: str) -> None:
     assert response.status_code == 422
 
 
-def test_add_faq_question_rejects_duplicates_even_with_punctuation_changes(api: Api) -> None:
-    seeded(api)
-    path = "/api/companies/kemira/faq/questions"
-    first = api.send(
-        "POST",
-        path,
-        json={"text": "How can water reuse help?"},
-        headers=ADMIN,
-    )
-    duplicate = api.send(
-        "POST",
-        path,
-        json={"text": "How can water reuse help!"},
-        headers=ADMIN,
-    )
-    assert first.status_code == 201
-    assert duplicate.status_code == 409
-    questions = api.get(path).json()
-    assert len(questions) == 1
-    assert questions[0]["id"] == first.json()["id"]
+def create_saved_question(api: Api, text: str) -> PublicQuestion:
+    async def insert_question(session: AsyncSession) -> PublicQuestion:
+        question = PublicQuestion(
+            company_id="kemira",
+            source_url="https://answerwatch-jade.vercel.app/demo/public-questions.html",
+            text=text,
+            normalized=normalise_question(text),
+            relevant=True,
+            relevance_reason="Relevant in test setup",
+        )
+        session.add(question)
+        await session.commit()
+        return question
+
+    return api.with_session(insert_question)
 
 
 def test_delete_faq_question_removes_the_question_and_its_draft(api: Api) -> None:
     seeded(api)
-    created = api.send(
-        "POST",
-        "/api/companies/kemira/faq/questions",
-        json={"text": "How can water reuse help?"},
-        headers=ADMIN,
-    ).json()
-    question_id = created["id"]
+    created = create_saved_question(api, "How can water reuse help?")
+    question_id = str(created.id)
 
     async def add_draft(session: AsyncSession) -> None:
         session.add(
             FaqDraft(
                 company_id="kemira",
-                public_question_id=UUID(question_id),
-                question=created["text"],
+                public_question_id=created.id,
+                question=created.text,
                 answer="A stored draft answer.",
                 source_urls=["https://example.org/source"],
             )
@@ -243,21 +263,16 @@ def test_delete_faq_question_removes_the_question_and_its_draft(api: Api) -> Non
 
 def test_delete_faq_question_returns_404_for_unknown_or_other_company_question(api: Api) -> None:
     seeded(api)
-    created = api.send(
-        "POST",
-        "/api/companies/kemira/faq/questions",
-        json={"text": "How can water reuse help?"},
-        headers=ADMIN,
-    ).json()
+    created = create_saved_question(api, "How can water reuse help?")
 
     response = api.send(
         "DELETE",
-        f"/api/companies/not-kemira/faq/questions/{created['id']}",
+        f"/api/companies/not-kemira/faq/questions/{created.id}",
         headers=ADMIN,
     )
 
     assert response.status_code == 404
-    assert api.get("/api/companies/kemira/faq/questions").json()[0]["id"] == created["id"]
+    assert api.get("/api/companies/kemira/faq/questions").json()[0]["id"] == str(created.id)
 
 
 def test_unknown_job_and_company(api: Api) -> None:

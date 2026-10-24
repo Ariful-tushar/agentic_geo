@@ -140,8 +140,8 @@ First thing: check that the scheduled run happened this morning (GitHub Actions 
 
 ### D5.2 Support agent (AI-readiness check)
 - **Build:** SPEC §8.5 as a LangGraph graph; API POST/GET readiness (background task + status); `readiness` command; **AI-readiness** page.
-- **Check:** run a check on `https://www.kemira.com/company/` from the live site; result shows X of N, missing facts and 3 suggestions.
-- **Done when:** works live.
+- **Check:** `cd backend`; `uv run ruff check .`; `uv run pytest -q tests/test_readiness.py`; `cd ../frontend`; `npm run build`. After deployment, run a check on `https://www.kemira.com/company/` from the live site; result shows X of N, missing facts and 3 suggestions.
+- **Done when:** code and focused tests pass; live check remains for deployment.
 
 ### D5.3 Final check and README
 - **Build:** run all tests and the frontend build, fix problems; README (what it is, live link, screenshots placeholders, architecture diagram, how to add a company, limits, disclaimer); update About page.

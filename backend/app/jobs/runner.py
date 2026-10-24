@@ -26,6 +26,7 @@ from app.schemas.api import JobName, JobStartOut
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 LOG_DIR = BACKEND_DIR / "logs" / "jobs"
 WORKFLOW_FILE = "agents.yml"
+FAQ_SOURCE_WORKFLOW_FILE = "update-faq-source.yml"
 GITHUB_API = "https://api.github.com"
 GITHUB_API_VERSION = "2026-03-10"
 STALE_AFTER = timedelta(hours=3)  # a "running" run older than this is treated as crashed
@@ -159,7 +160,42 @@ class GithubJobRunner:
         )
 
 
-def github_error(response: httpx.Response) -> str:
+async def dispatch_faq_source_update(
+    company_id: str, question: str, client: httpx.AsyncClient | None = None
+) -> str:
+    """Ask the dedicated workflow to safely add a question to the demo FAQ source page."""
+    settings = get_settings()
+    if not settings.github_dispatch_token:
+        raise JobStartError("GITHUB_DISPATCH_TOKEN is not set")
+    if settings.github_repo.startswith("your-user/"):
+        raise JobStartError("GITHUB_REPO is not set")
+    url = (
+        f"{GITHUB_API}/repos/{settings.github_repo}/actions/workflows/"
+        f"{FAQ_SOURCE_WORKFLOW_FILE}/dispatches"
+    )
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {settings.github_dispatch_token}",
+        "X-GitHub-Api-Version": GITHUB_API_VERSION,
+    }
+    body = {
+        "ref": settings.github_ref,
+        "inputs": {"company": company_id, "question": question},
+    }
+    active_client = client or httpx.AsyncClient(timeout=20)
+    try:
+        response = await active_client.post(url, headers=headers, json=body)
+    except httpx.HTTPError as exc:
+        raise JobStartError(f"could not reach GitHub: {type(exc).__name__}") from exc
+    finally:
+        if client is None:
+            await active_client.aclose()
+    if response.status_code not in (200, 204):
+        raise JobStartError(github_error(response, FAQ_SOURCE_WORKFLOW_FILE))
+    return FAQ_SOURCE_WORKFLOW_FILE
+
+
+def github_error(response: httpx.Response, workflow_file: str = WORKFLOW_FILE) -> str:
     code = response.status_code
     try:
         message = str(response.json().get("message", ""))[:200]
@@ -168,9 +204,9 @@ def github_error(response: httpx.Response) -> str:
     hints = {
         401: "the token was rejected (check GITHUB_DISPATCH_TOKEN)",
         403: "the token may not run workflows (needs Actions: read and write on the repo)",
-        404: f"repository or workflow not found (check GITHUB_REPO and that {WORKFLOW_FILE} "
+        404: f"repository or workflow not found (check GITHUB_REPO and that {workflow_file} "
         "exists on the branch)",
-        422: f"{WORKFLOW_FILE} has no workflow_dispatch trigger, or the inputs were refused",
+        422: f"{workflow_file} has no workflow_dispatch trigger, or the inputs were refused",
     }
     return f"GitHub answered {code}: {hints.get(code, 'unexpected answer')}. {message}".strip()
 

@@ -16,6 +16,7 @@ from app.jobs.runner import (
     JobNotAvailable,
     JobStartError,
     LocalJobRunner,
+    dispatch_faq_source_update,
     github_error,
     job_args,
     start_job,
@@ -219,6 +220,50 @@ async def test_github_runner_dispatches_the_agents_workflow(
     }
     assert (started.runner, started.status) == ("github", "started")
     assert TOKEN not in started.model_dump_json()
+
+
+async def test_faq_source_dispatch_sends_question_as_workflow_input(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(runner, "get_settings", lambda: github_settings())
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(204)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        workflow = await dispatch_faq_source_update(
+            "kemira", "Which water question should be added?", client=client
+        )
+    (request,) = seen
+    assert workflow == "update-faq-source.yml"
+    assert str(request.url) == (
+        "https://api.github.com/repos/me/answerwatch/actions/workflows/"
+        "update-faq-source.yml/dispatches"
+    )
+    assert json.loads(request.content) == {
+        "ref": "main",
+        "inputs": {"company": "kemira", "question": "Which water question should be added?"},
+    }
+
+
+@pytest.mark.parametrize(
+    ("response", "message"),
+    [
+        (httpx.Response(401, json={"message": "bad token"}), "GITHUB_DISPATCH_TOKEN"),
+        (httpx.Response(404, json={"message": "missing"}), "update-faq-source.yml"),
+    ],
+)
+async def test_faq_source_dispatch_reports_github_failures(
+    monkeypatch: pytest.MonkeyPatch, response: httpx.Response, message: str
+) -> None:
+    gh, _ = github_runner(monkeypatch, response)
+    client = gh._client
+    assert client is not None
+    monkeypatch.setattr(runner, "get_settings", lambda: github_settings())
+    with pytest.raises(JobStartError, match=message):
+        await dispatch_faq_source_update("kemira", "A valid public question?", client=client)
 
 
 async def test_github_runner_accepts_a_200_with_run_details(

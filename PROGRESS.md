@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-Current step: D5.1 code done (full pytest run still pending, see log). Next: D5.2.
+Current step: D5.2 and FAQ source-page update code complete; deployment/live checks pending. Next: D5.3.
 Ax live target: Fri 23 Oct 2026. All agents live: Sun 25 Oct. Submit: Mon 26 Oct (deadline Tue 27 Oct).
 
 ## Checklist
@@ -32,7 +32,7 @@ Ax live target: Fri 23 Oct 2026. All agents live: Sun 25 Oct. Submit: Mon 26 Oct
 
 ### Day 5 (Sun 25 Oct): FAQ agent, Support agent, finish
 - [x] D5.1 FAQ agent: code and tests done; user deploys and does the live check
-- [ ] D5.2 Support agent (AI-readiness check)
+- [x] D5.2 Support agent (AI-readiness check): code and focused tests done; user deploys and checks live
 - [ ] D5.3 Final check and README
 
 ### Day 6 (Mon 26 Oct): submit
@@ -40,6 +40,9 @@ Ax live target: Fri 23 Oct 2026. All agents live: Sun 25 Oct. Submit: Mon 26 Oct
 
 ## Log (newest first)
 <!-- one entry per step: date, step, what was built, decisions, open issues -->
+- 2026-10-25 FAQ draft policy confirmed: keep drafts grounded in indexed company sources. Relevant questions without sufficient evidence do not get placeholder or ungrounded drafts; the live database was not queried to determine why each question lacks a draft.
+- 2026-10-25 D5.1 FAQ source-page workflow correction: `/add-question` now dispatches `update-faq-source.yml`, which safely adds the question to `frontend/public/demo/public-questions.html` and commits it; it no longer writes a pre-approved database row, refreshes FAQ rows, or starts an immediate scan. The hourly scanner performs discovery, relevance, then grounded drafting. Legacy questions already inserted from the dashboard are not automatically re-evaluated; remove an incorrect legacy row from the FAQ page. A relevant question can remain without a draft if no supported answer can be grounded in the indexed company pages. Checks: `uv run ruff check .`; focused tests (94 passed; two deletion-test setup failures fixed, then 9 targeted FAQ tests passed); `npm run build`; workflow YAML parse; `git diff --check`. No live dispatch/deployment. Render needs `GITHUB_REPO` and `GITHUB_DISPATCH_TOKEN` with Actions write; the workflow's `GITHUB_TOKEN` has Contents write to commit.
+- 2026-10-25 D5.2 Support agent: added the LangGraph readiness workflow, fresh page fetch, source-quote verification, Ax judge scoring, exactly three grounded suggestions, failure status persistence, public history/status APIs and admin-only background-start API, the `readiness --company <id> <url>` command, and the AI-readiness page with polling/history. The existing `readiness_checks` table was sufficient; no migration. Checks: `uv run ruff check .`, `uv run pytest -q tests/test_readiness.py` (5 passed), `npm run build`, CLI `--help`, and Pylance diagnostics passed. Per user request the full backend suite was stopped; the live AI-readiness check remains pending deployment.
 - 2026-10-25 D5.1 follow-up, hourly live FAQ checks and question removal: `.github/workflows/agents.yml` now runs the FAQ-only job hourly for Kemira while keeping the existing daily workflow; the FAQ page has an admin-only scan action and a Refresh action for saved questions/drafts. Admins can remove a question and its linked draft; questions still on the live source page may be found again. The live `faq_source_urls` pages remain the discovery source; the database stores discoveries, relevance decisions and drafts. Checks so far: `uv run ruff check .` passed; `uv run pytest -q tests/test_api_admin.py` (59 passed); `npm run build` passed (existing large-bundle warning); workflow YAML parsed. Full backend suite is running.
 - 2026-10-24 D5.1 follow-up, direct question page: moved the admin question form from `/faq` to `/add-question` in `frontend/src/pages/AddQuestion.tsx`. The route is registered inside the shared layout but has no sidebar, button, or in-app link; the FAQ page remains for viewing discovered questions and drafts. API behavior is unchanged. Validation: `npm run build` passed (existing large JS bundle warning). The page is available after frontend deployment; admin login is required to submit.
 - 2026-10-24 D5.1 follow-up, manual FAQ question entry: Admins can add a question in the FAQ page; `POST /api/companies/{id}/faq/questions` validates 10–300 characters, trims and normalises text, rejects duplicates, and stores it as relevant with source "Added from dashboard". The UI starts the existing FAQ job after saving and reports if job startup fails. Shared normalisation moved to `app/agents/faq/text.py`. Checks: `uv run ruff check .` clean; `uv run pytest -q tests/test_api_admin.py tests/test_faq.py` (74 passed); `npm run build` clean (existing large JS bundle warning). Not tested on the live deployment; it requires pushing the backend and frontend changes and logging in as admin. Next planned step remains D5.2.
@@ -144,5 +147,6 @@ Ax live target: Fri 23 Oct 2026. All agents live: Sun 25 Oct. Submit: Mon 26 Oct
 - D5.1 follow-up: admins may add a question directly in the dashboard. Manual questions are marked relevant by the admin's submission, saved with source "Added from dashboard", and the UI starts the FAQ job; draft generation still uses the existing knowledge base and source-grounding rules.
 - D5.1 follow-up: configured live `faq_source_urls` pages are the source for discovering questions. The database stores discovered questions and their relevance/draft state; hourly workflow scans and the admin scan button fetch the source pages, while Refresh only reloads saved results.
 - D5.1 follow-up: admin deletion removes the selected question and its linked draft; a question still present on a scanned page may be rediscovered on a later run.
+- D5.1 follow-up: keep only evidence-backed FAQ drafts; do not create placeholder or ungrounded drafts for relevant questions whose answers are unsupported by company sources.
 
 ## Known issues

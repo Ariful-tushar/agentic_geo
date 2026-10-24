@@ -4,24 +4,26 @@ import asyncio
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.agents.faq.text import normalise_question
+from app.agents.support.graph import run_readiness_background
 from app.api.auth import is_admin, require_admin
 from app.api.deps import get_email_sender
 from app.api.routes_public import company_or_404
+from app.db import repo
 from app.db.models import Company, PublicQuestion
 from app.db.session import get_session
 from app.emails.commands import send_test_email
 from app.emails.smtp import Sender
+from app.faq_source import SOURCE_PAGE_URL
 from app.jobs.runner import (
     JobAlreadyRunning,
     JobNotAvailable,
     JobRunner,
     JobStartError,
+    dispatch_faq_source_update,
     get_job_runner,
     start_job,
 )
@@ -29,6 +31,7 @@ from app.profiles.loader import ProfileError, import_profile, parse_profile
 from app.schemas.api import (
     CompanyCreated,
     CreateCompanyIn,
+    FaqSourceUpdateOut,
     ImportIn,
     JobIn,
     JobName,
@@ -37,6 +40,8 @@ from app.schemas.api import (
     LoginOut,
     PublicQuestionIn,
     PublicQuestionOut,
+    ReadinessCheckIn,
+    ReadinessCheckOut,
     SettingsIn,
     SettingsOut,
     TestEmailOut,
@@ -113,35 +118,48 @@ async def start_company_job(
 
 @router.post(
     "/companies/{company_id}/faq/questions",
-    response_model=PublicQuestionOut,
-    status_code=201,
+    response_model=FaqSourceUpdateOut,
+    status_code=202,
     dependencies=[Admin],
 )
 async def add_faq_question(
     company_id: str, body: PublicQuestionIn, session: Session
-) -> PublicQuestionOut:
-    """Save an admin-submitted FAQ question so the FAQ job can draft an answer."""
-    await company_or_404(session, company_id)
-    normalized = normalise_question(body.text)
-    statement = (
-        insert(PublicQuestion)
-        .values(
-            company_id=company_id,
-            source_url="Added from dashboard",
-            text=body.text,
-            normalized=normalized,
-            relevant=True,
-            relevance_reason="Added manually from the dashboard.",
+) -> FaqSourceUpdateOut:
+    """Queue an escaped update to the configured static FAQ source; the agent ingests it later."""
+    company = await company_or_404(session, company_id)
+    if str(SOURCE_PAGE_URL) not in company.faq_source_urls:
+        raise HTTPException(
+            409,
+            "This company is not configured to use the demo FAQ source page.",
         )
-        .on_conflict_do_nothing(index_elements=["company_id", "normalized"])
-        .returning(PublicQuestion)
+    try:
+        workflow = await dispatch_faq_source_update(company_id, body.text)
+    except JobStartError as exc:
+        raise HTTPException(502, f"Could not update the FAQ source page: {exc}") from exc
+    return FaqSourceUpdateOut(
+        status="queued",
+        workflow=workflow,
+        detail="The source page update is queued. The FAQ agent will pick it up on its next scan.",
     )
-    question = (await session.scalars(statement)).first()
-    if question is None:
-        raise HTTPException(409, "This question has already been added.")
-    await session.commit()
-    await session.refresh(question)
-    return PublicQuestionOut.model_validate(question, from_attributes=True)
+
+
+@router.post(
+    "/companies/{company_id}/readiness",
+    response_model=ReadinessCheckOut,
+    status_code=202,
+    dependencies=[Admin],
+    tags=["readiness"],
+)
+async def start_readiness_check(
+    company_id: str,
+    body: ReadinessCheckIn,
+    background_tasks: BackgroundTasks,
+    session: Session,
+) -> ReadinessCheckOut:
+    await company_or_404(session, company_id)
+    check = await repo.create_readiness_check(session, company_id, str(body.url))
+    background_tasks.add_task(run_readiness_background, check.id)
+    return ReadinessCheckOut.model_validate(check, from_attributes=True)
 
 
 @router.delete(
