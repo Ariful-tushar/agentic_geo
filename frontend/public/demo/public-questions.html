@@ -3,20 +3,279 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Demo: public questions (AnswerWatch test page)</title>
+  <meta name="theme-color" content="#f7f5f1">
+  <title>QUORA Test | Questions about water and industry</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 16px; color: #1a1a1a; }
-    h1 { font-size: 22px; }
-    p.note { color: #555; font-size: 14px; }
-    ul { list-style: none; padding: 0; }
-    li { border-bottom: 1px solid #e5e5e5; padding: 12px 0; }
-    time { color: #777; font-size: 13px; display: block; }
+    :root {
+      color-scheme: light;
+      --ink: #202b36;
+      --muted: #66717d;
+      --line: #e5e2dc;
+      --paper: #f7f5f1;
+      --card: #fff;
+      --accent: #b84032;
+      --accent-soft: #f8e9e5;
+      --blue: #426b82;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .site-header {
+      border-bottom: 1px solid var(--line);
+      background: rgb(255 255 255 / 88%);
+    }
+
+    .header-inner {
+      width: min(1120px, calc(100% - 40px));
+      min-height: 68px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font-size: 18px;
+      font-weight: 750;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px 11px 11px 3px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 18px;
+    }
+
+    .header-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .page-shell {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 50px 0 72px;
+    }
+
+    .intro {
+      max-width: 700px;
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 52px);
+      line-height: 1.08;
+      letter-spacing: -0.055em;
+    }
+
+    .intro-copy {
+      max-width: 610px;
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 285px;
+      align-items: start;
+      gap: 24px;
+    }
+
+    .feed,
+    .about-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+      box-shadow: 0 8px 30px rgb(32 43 54 / 4%);
+    }
+
+    .feed-heading {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .feed-heading h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .feed-heading p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      position: relative;
+      padding: 20px 24px 22px 76px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    li:last-child { border-bottom: 0; }
+
+    li::before {
+      content: "?";
+      position: absolute;
+      top: 21px;
+      left: 24px;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-family: Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    time {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .question {
+      display: block;
+      font-size: 17px;
+      font-weight: 680;
+      line-height: 1.4;
+      letter-spacing: -0.015em;
+    }
+
+    .question-context {
+      display: block;
+      margin-top: 10px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .about-card {
+      padding: 21px;
+    }
+
+    .about-card h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .about-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 17px;
+    }
+
+    .topic {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #edf2f4;
+      color: #405c6d;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .disclaimer {
+      margin: 22px 2px 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    @media (max-width: 760px) {
+      .header-inner,
+      .page-shell { width: min(100% - 28px, 600px); }
+      .page-shell { padding-top: 36px; }
+      .content-grid { grid-template-columns: 1fr; }
+      .about-card { order: -1; }
+      .header-note { font-size: 11px; text-align: right; }
+    }
+
+    @media (max-width: 420px) {
+      .header-inner { min-height: 60px; gap: 12px; }
+      .brand { font-size: 16px; }
+      .header-note { max-width: 120px; }
+      .page-shell { padding-top: 30px; }
+      .feed-heading { padding: 17px 18px; }
+      li { padding: 18px 17px 20px 62px; }
+      li::before { left: 16px; width: 32px; height: 32px; }
+      .question { font-size: 16px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Public questions: water and industrial chemistry</h1>
-  <p class="note">Demo page for the AnswerWatch FAQ agent. It imitates a public Q&amp;A site.
-    To test "new question" detection, add a new &lt;li&gt; at the top and redeploy.</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="QUORA Test questions home">
+        <span class="brand-mark" aria-hidden="true">~</span>
+        <span>QUORA Test</span>
+      </a>
+      <span class="header-note">Independent community question board</span>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">Water · chemistry · industry</p>
+      <h1 id="page-title">Questions worth exploring.</h1>
+      <p class="intro-copy">
+        A public collection of questions about water treatment, industrial chemistry, and more
+        sustainable ways to make and use essential materials.
+      </p>
+    </section>
+
+    <div class="content-grid">
+      <section class="feed" aria-labelledby="feed-title">
+        <div class="feed-heading">
+          <h2 id="feed-title">Latest questions</h2>
+          <p>New questions are reviewed for relevance before FAQ drafts are prepared.</p>
+        </div>
   <ul>
     <li><time datetime="2026-10-24">24 Oct 2026</time><span class="question">For Water Solutions which company will be good in jyvaskyla</span></li>
     <li><time datetime="2026-10-24">24 Oct 2026</time><span class="question">what is the best resort in jyvaskyla</span></li>
@@ -32,5 +291,24 @@
     <li><time datetime="2026-10-13">13 Oct 2026</time><span class="question">Which Finnish chemical companies are listed on Nasdaq Helsinki?</span></li>
     <li><time datetime="2026-10-12">12 Oct 2026</time><span class="question">How can a data center reduce water use in its cooling system?</span></li>
   </ul>
+      </section>
+
+      <aside class="about-card" aria-labelledby="about-title">
+        <h2 id="about-title">About this board</h2>
+        <p>
+          Waterline is a demo question feed for AnswerWatch. Questions are checked by an automated
+          relevance review; any answer drafts are grounded in company information and are not
+          published automatically.
+        </p>
+        <div class="topics" aria-label="Topics">
+          <span class="topic">Water treatment</span>
+          <span class="topic">Chemistry</span>
+          <span class="topic">Industry</span>
+        </div>
+      </aside>
+    </div>
+
+    <p class="disclaimer">Independent demo, not affiliated with any company mentioned in the questions.</p>
+  </main>
 </body>
 </html>
