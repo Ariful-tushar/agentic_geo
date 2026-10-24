@@ -34,10 +34,24 @@ def load_workflow() -> dict:
     return data
 
 
-def test_workflow_is_scheduled_in_helsinki_time_and_can_be_dispatched() -> None:
+def test_workflow_scans_faq_hourly_and_keeps_the_daily_schedule() -> None:
     triggers = load_workflow()["on"]
-    assert triggers["schedule"] == [{"cron": "15 7 * * *", "timezone": "Europe/Helsinki"}]
+    assert "push" not in triggers
+    assert triggers["schedule"] == [
+        {"cron": "0 * * * *", "timezone": "Europe/Helsinki"},
+        {"cron": "15 7 * * *", "timezone": "Europe/Helsinki"},
+    ]
     assert set(triggers["workflow_dispatch"]["inputs"]) == {"job", "company"}
+    env = next(
+        step["env"]
+        for step in load_workflow()["jobs"]["run"]["steps"]
+        if step.get("name") == "Run the job"
+    )
+    hourly_faq_job = (
+        "github.event_name == 'schedule' && github.event.schedule == '0 * * * *' && 'faq'"
+    )
+    assert hourly_faq_job in env["JOB"]
+    assert "github.event_name == 'push'" not in env["JOB"] + env["COMPANY"]
 
 
 def test_workflow_input_help_names_every_job() -> None:

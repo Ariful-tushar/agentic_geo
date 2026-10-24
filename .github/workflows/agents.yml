@@ -1,12 +1,7 @@
 name: agents
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - frontend/public/demo/public-questions.html
   schedule:
-    # Check the live FAQ source hourly; the daily workflow still runs at 07:15 Helsinki time.
+    # Scan the live FAQ source hourly; keep the existing daily workflow.
     - cron: "0 * * * *"
       timezone: "Europe/Helsinki"
     - cron: "15 7 * * *"
@@ -30,22 +25,6 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v7
-      - name: Wait for the updated question page to deploy
-        if: github.event_name == 'push'
-        env:
-          PAGE_URL: https://answerwatch-jade.vercel.app/demo/public-questions.html
-        run: |
-          for attempt in {1..60}; do
-            if curl --fail --silent "$PAGE_URL" --output /tmp/public-questions.html \
-              && cmp --silent frontend/public/demo/public-questions.html /tmp/public-questions.html; then
-              echo "The updated question page is live."
-              exit 0
-            fi
-            echo "Waiting for Vercel deployment ($attempt/60)..."
-            sleep 10
-          done
-          echo "The updated question page was not deployed within 10 minutes." >&2
-          exit 1
       - uses: astral-sh/setup-uv@v10.3.1
       - run: uv sync --project backend --frozen
       - name: Run the job
@@ -55,8 +34,8 @@ jobs:
           if [ -n "$COMPANY" ]; then args+=(--company "$COMPANY"); fi
           uv run --project backend --frozen python -m app.cli "${args[@]}"
         env:
-          JOB: ${{ github.event_name == 'push' && 'faq' || (github.event_name == 'schedule' && github.event.schedule == '0 * * * *' && 'faq') || github.event.inputs.job || 'daily' }}
-          COMPANY: ${{ github.event_name == 'push' && 'kemira' || (github.event_name == 'schedule' && github.event.schedule == '0 * * * *' && 'kemira') || github.event.inputs.company }}
+          JOB: ${{ github.event_name == 'schedule' && github.event.schedule == '0 * * * *' && 'faq' || github.event.inputs.job || 'daily' }}
+          COMPANY: ${{ github.event_name == 'schedule' && github.event.schedule == '0 * * * *' && 'kemira' || github.event.inputs.company }}
           TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
