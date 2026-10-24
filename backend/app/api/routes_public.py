@@ -19,7 +19,10 @@ from app.schemas.api import (
     CitationOut,
     CompanyDetail,
     CompanyListItem,
+    CompetitorEventOut,
     CompetitorOut,
+    CompetitorRef,
+    CompetitorSummaryPoint,
     DetailCell,
     DetailRow,
     DetailsOut,
@@ -308,6 +311,59 @@ async def answer_detail(answer_id: uuid.UUID, session: Session) -> AnswerDetail:
         else None,
         previous=previous,
     )
+
+
+@router.get(
+    "/companies/{company_id}/competitors/events",
+    response_model=list[CompetitorEventOut],
+    tags=["competitors"],
+)
+async def competitor_events(
+    company_id: str,
+    session: Session,
+    today: Today,
+    days: Annotated[int, Query(ge=1, le=365)] = 30,
+    engine: str | None = None,
+) -> list[CompetitorEventOut]:
+    await company_or_404(session, company_id)
+    rows = await repo.competitor_events_since(
+        session, company_id, today - timedelta(days=days - 1), engine
+    )
+    return [
+        CompetitorEventOut(
+            id=e.id,
+            run_date=e.run_date,
+            engine=e.engine,
+            question_code=q.code,
+            question_text=q.text,
+            kind=e.kind,  # type: ignore[arg-type]
+            competitors=[CompetitorRef(**c) for c in e.competitors],
+            company_rank=e.company_rank,
+            status=e.status,  # type: ignore[arg-type]
+            report_status=e.report_status,  # type: ignore[arg-type]
+            report=e.report,
+            answer_id=e.answer_id,
+        )
+        for e, q in rows
+    ]
+
+
+@router.get(
+    "/companies/{company_id}/competitors/summary",
+    response_model=list[CompetitorSummaryPoint],
+    tags=["competitors"],
+)
+async def competitor_summary(
+    company_id: str,
+    session: Session,
+    today: Today,
+    days: Annotated[int, Query(ge=1, le=365)] = 14,
+) -> list[CompetitorSummaryPoint]:
+    await company_or_404(session, company_id)
+    rows = await repo.company_mention_counts(session, company_id, today - timedelta(days=days - 1))
+    return [
+        CompetitorSummaryPoint(date=d, engine=e, n_answers=n, n_mentioned=c) for d, e, n, c in rows
+    ]
 
 
 @router.get("/companies/{company_id}/alerts", response_model=list[AlertOut], tags=["alerts"])

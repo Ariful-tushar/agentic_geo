@@ -8,7 +8,7 @@ from pathlib import Path
 from app.agents.daily import daily_command
 from app.db.session import get_engine, get_sessionmaker
 from app.emails.commands import run_email_command
-from app.jobs.registry import JOBS, onboard_command, run_ax_command
+from app.jobs.registry import JOBS, onboard_command, run_ax_command, run_competitor_command
 from app.loop import run
 from app.profiles.loader import ProfileError, import_profile, load_profile_file
 
@@ -121,6 +121,10 @@ def cmd_run_ax(args: argparse.Namespace) -> int:
     return run(run_ax_command(args.company, args.mode, args.trigger))
 
 
+def cmd_run_competitor(args: argparse.Namespace) -> int:
+    return run(run_competitor_command(args.company, args.mode, args.trigger))
+
+
 def cmd_send_report(args: argparse.Namespace) -> int:
     return run(run_email_command("report", args.company, args.mode, args.force))
 
@@ -182,6 +186,12 @@ def build_parser() -> argparse.ArgumentParser:
     ax.add_argument("--mode", choices=["live", "dev"], default="live")
     ax.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
     ax.set_defaults(func=cmd_run_ax)
+
+    comp = sub.add_parser("run-competitor", help="analyse new competitor events (resumable)")
+    comp.add_argument("--company", required=True)
+    comp.add_argument("--mode", choices=["live", "dev"], default="live")
+    comp.add_argument("--trigger", choices=["manual", "schedule"], default="manual")
+    comp.set_defaults(func=cmd_run_competitor)
 
     job = sub.add_parser("job", help="run a job by name (used by the API and GitHub Actions)")
     job.add_argument("name", choices=sorted(JOBS))

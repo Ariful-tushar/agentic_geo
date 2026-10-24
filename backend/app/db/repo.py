@@ -4,7 +4,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import date
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, exists, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,7 @@ from app.db.models import (
     DailyAccuracy,
     EmailLog,
     KnowledgeSource,
+    Mention,
     Question,
     Run,
     Score,
@@ -391,6 +392,52 @@ async def alerts_since(
         .order_by(Alert.run_date.desc(), Alert.severity, Question.code)
     )
     return [(a, q) for a, q in rows.all()]
+
+
+async def competitor_events_since(
+    session: AsyncSession, company_id: str, since: date, engine: str | None
+) -> list[tuple[CompetitorEvent, Question]]:
+    stmt = (
+        live_competitor_events(company_id)
+        .join(Question, Question.id == CompetitorEvent.question_id)
+        .add_columns(Question)
+        .where(CompetitorEvent.run_date >= since)
+        .order_by(CompetitorEvent.run_date.desc(), CompetitorEvent.engine, Question.code)
+    )
+    if engine:
+        stmt = stmt.where(CompetitorEvent.engine == engine)
+    return [(e, q) for e, q in (await session.execute(stmt)).all()]
+
+
+async def company_mention_counts(
+    session: AsyncSession, company_id: str, since: date
+) -> list[tuple[date, str, int, int]]:
+    """(day, engine, generic answers, answers that name the company) for live runs.
+
+    Answers with an error have no text and are not counted."""
+    named = exists().where(Mention.answer_id == Answer.id, Mention.brand_type == "company")
+    stmt = (
+        select(
+            Run.run_date,
+            Answer.engine,
+            func.count(Answer.id),
+            func.count(Answer.id).filter(named),
+        )
+        .join(Run, Run.id == Answer.run_id)
+        .join(Question, Question.id == Answer.question_id)
+        .where(
+            Answer.company_id == company_id,
+            Question.kind == "generic",
+            Answer.error.is_(None),
+            Answer.text.is_not(None),
+            Run.mode == "live",
+            Run.trigger != SIMULATED,
+            Run.run_date >= since,
+        )
+        .group_by(Run.run_date, Answer.engine)
+        .order_by(Run.run_date, Answer.engine)
+    )
+    return [(d, e, int(n), int(c)) for d, e, n, c in (await session.execute(stmt)).all()]
 
 
 async def recent_runs(session: AsyncSession, company_id: str, limit: int) -> list[Run]:

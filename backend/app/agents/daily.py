@@ -1,6 +1,6 @@
 """The `daily` command (SPEC 11): for each company, Ax -> competitor -> FAQ -> alert email ->
 daily report. Every step is isolated: an error in one step is recorded and the next step still
-runs. The competitor and FAQ agents are stubs until D4.1 and D5.1.
+runs. The FAQ agent is a stub until D5.1.
 
 Exit code: 1 when any step failed, 0 otherwise (a `partial` Ax run is reported, not a failure).
 """
@@ -59,7 +59,17 @@ async def step_ax(ctx: DailyContext) -> StepResult:
 
 
 async def step_competitor(ctx: DailyContext) -> StepResult:
-    return StepResult("competitor", "skipped", "not built yet (step D4.1)")
+    from app.agents.competitor.graph import default_deps, run_competitor
+
+    deps = default_deps()
+    try:
+        result = await run_competitor(deps, ctx.company_id, mode=ctx.mode)
+    finally:
+        await deps.fetcher.aclose()
+    message = (
+        f"{result.analysed} of {result.events} new events analysed, {result.postponed} postponed"
+    )
+    return StepResult("competitor", "partial" if result.postponed else "ok", message)
 
 
 async def step_faq(ctx: DailyContext) -> StepResult:

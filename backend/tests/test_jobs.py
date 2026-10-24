@@ -31,9 +31,10 @@ def test_job_args_are_the_dispatcher_command() -> None:
     assert job_args("ax", "kemira") == ["job", "ax", "--company", "kemira", "--trigger", "manual"]
 
 
-def test_the_registry_names_the_five_jobs_and_only_competitor_and_faq_are_missing() -> None:
+def test_the_registry_names_the_five_jobs_and_only_faq_is_missing() -> None:
     assert set(JOBS) == {"daily", "ax", "competitor", "faq", "onboard"}
-    assert {name for name in JOBS if job_is_available(name)} == {"daily", "ax", "onboard"}
+    available = {name for name in JOBS if job_is_available(name)}
+    assert available == {"daily", "ax", "competitor", "onboard"}
     assert not job_is_available("nope")
     assert JOBS["daily"].needs_company is False  # daily can run for every company
 
@@ -78,7 +79,7 @@ def test_dispatcher_passes_dev_mode(monkeypatch: pytest.MonkeyPatch) -> None:
     assert calls == [("kemira", "manual", "dev")]
 
 
-@pytest.mark.parametrize("name", ["competitor", "faq"])
+@pytest.mark.parametrize("name", ["faq"])
 def test_dispatcher_says_not_available_yet(name: str, capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["job", name, "--company", "kemira"]) == 2
     assert f"Job '{name}' is not available yet" in capsys.readouterr().err

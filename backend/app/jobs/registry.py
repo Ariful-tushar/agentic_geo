@@ -66,6 +66,27 @@ async def run_ax_command(company_id: str, mode: str = "live", trigger: str = "ma
     return 0 if result.status in ("completed", "skipped") else 1
 
 
+async def run_competitor_command(
+    company_id: str, mode: str = "live", trigger: str = "manual"
+) -> int:
+    from app.agents.competitor.graph import default_deps, run_competitor
+
+    deps = default_deps()
+    try:
+        result = await run_competitor(deps, company_id, mode=mode)
+    finally:
+        await deps.fetcher.aclose()
+        await get_engine().dispose()
+    print(
+        f"Competitor agent {result.status}: {result.events} new events, {result.analysed} "
+        f"analysed ({result.found} with a report, {result.nothing_found} nothing found), "
+        f"{result.postponed} postponed."
+    )
+    for warning in result.warnings:
+        print(f"  warning: {warning}")
+    return 0 if result.status == "completed" else 1
+
+
 async def _job_onboard(company_id: str | None, trigger: str, mode: str) -> int:
     assert company_id
     return await onboard_command(company_id, trigger)
@@ -82,6 +103,11 @@ async def _job_daily(company_id: str | None, trigger: str, mode: str) -> int:
     return await daily_command(company_id, trigger, mode)
 
 
+async def _job_competitor(company_id: str | None, trigger: str, mode: str) -> int:
+    assert company_id
+    return await run_competitor_command(company_id, mode, trigger)
+
+
 @dataclass(frozen=True)
 class Job:
     handler: Handler | None  # None = not available yet
@@ -95,7 +121,7 @@ class Job:
 JOBS: dict[str, Job] = {
     "daily": Job(_job_daily, needs_company=False),
     "ax": Job(_job_ax),
-    "competitor": Job(None),  # D4.1
+    "competitor": Job(_job_competitor),
     "faq": Job(None),  # D5.1
     "onboard": Job(_job_onboard),
 }

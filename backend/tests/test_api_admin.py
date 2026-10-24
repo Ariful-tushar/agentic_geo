@@ -119,7 +119,7 @@ def test_settings_reject_bad_emails_and_unknown_companies(api: Api) -> None:
 # ---- jobs ----------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("job", ["ax", "onboard"])
+@pytest.mark.parametrize("job", ["ax", "onboard", "competitor"])
 def test_available_jobs_are_started_through_the_runner(api: Api, job: str) -> None:
     seeded(api)
     response = api.send("POST", "/api/companies/kemira/jobs", json={"job": job}, headers=ADMIN)
@@ -134,7 +134,7 @@ def test_available_jobs_are_started_through_the_runner(api: Api, job: str) -> No
     assert api.runner.started == [(job, "kemira")]
 
 
-@pytest.mark.parametrize("job", ["competitor", "faq"])
+@pytest.mark.parametrize("job", ["faq"])
 def test_jobs_that_are_not_built_yet_answer_501(api: Api, job: str) -> None:
     seeded(api)
     response = api.send("POST", "/api/companies/kemira/jobs", json={"job": job}, headers=ADMIN)

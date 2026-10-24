@@ -1,8 +1,11 @@
 """Shapes shared by the AI layer and the agents."""
 
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
+
+MAX_REPORT_CHARS = 500
 
 
 class Citation(BaseModel):
@@ -105,3 +108,21 @@ class OtherBrands(BaseModel):
     """Company names (other than the tracked ones) the AI sees in each generic answer."""
 
     items: list[OtherBrandsItem]
+
+
+class CompetitorReport(BaseModel):
+    """Our AI's 2 to 3 line report on why a competitor was named before the company."""
+
+    report: str
+
+    @field_validator("report")
+    @classmethod
+    def short_and_filled(cls, value: str) -> str:
+        value = " ".join(value.split())
+        if not value:
+            raise ValueError("the report is empty")
+        if len(value) > MAX_REPORT_CHARS:
+            raise ValueError(f"the report is longer than {MAX_REPORT_CHARS} characters")
+        if len(re.findall(r"[.!?](?:\s|$)", value)) > 3:
+            raise ValueError("the report must be at most 3 sentences")
+        return value

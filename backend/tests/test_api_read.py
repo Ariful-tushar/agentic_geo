@@ -1,6 +1,19 @@
-import pytest
+from datetime import date
+from typing import Any
 
-from tests.api_helpers import ADMIN, D1, D2, Api, api, new_id, seeded  # noqa: F401
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from tests.api_helpers import (  # noqa: F401
+    ADMIN,
+    D1,
+    D2,
+    Api,
+    add_answer,
+    api,
+    new_id,
+    seeded,
+)
 
 # ---- engines and companies -----------------------------------------------------------------
 
@@ -323,3 +336,86 @@ def test_email_log_limit_and_unknown_company(api: Api) -> None:
     assert api.get("/api/companies/kemira/emails").json() == []
     assert api.get("/api/companies/kemira/emails?limit=0").status_code == 422
     assert api.get("/api/companies/nope/emails").status_code == 404
+
+
+# ---- competitors ---------------------------------------------------------------------------
+
+
+async def seed_competitors(session: AsyncSession, ids: dict[str, Any]) -> None:
+    """Live D2: groq_web G01 names Ecolab, not Kemira (analysed); G02 names Kemira (no event).
+    Live D1: groq_web G01 names Kemira. Dev D2: an event that must never show up."""
+    from sqlalchemy import select
+
+    from app.db.models import CompetitorEvent, Mention, Question, Run
+
+    generic = await session.scalars(select(Question).where(Question.code.like("G%")))
+    qs = {q.code: q for q in generic}
+    runs = {(r.run_date, r.mode): r for r in await session.scalars(select(Run))}
+
+    async def answer(day: date, mode: str, code: str, text: str, company: bool) -> Any:
+        a = await add_answer(session, runs[(day, mode)], qs[code], "groq_web", text)
+        if company:
+            session.add(Mention(answer_id=a.id, brand_type="company", name="Kemira", rank=1))
+        else:
+            session.add(Mention(answer_id=a.id, brand_type="competitor", name="Ecolab", rank=1))
+        return a
+
+    await answer(D1, "live", "G01", "Kemira leads.", True)
+    missing = await answer(D2, "live", "G01", "Ecolab leads.", False)
+    await answer(D2, "live", "G02", "Kemira and Ecolab.", True)
+    dev = await answer(D2, "dev", "G01", "Ecolab dev.", False)
+    for a, report in ((missing, "The cited article lists Ecolab only."), (dev, None)):
+        session.add(
+            CompetitorEvent(
+                company_id="kemira",
+                run_date=D2,
+                answer_id=a.id,
+                question_id=a.question_id,
+                engine="groq_web",
+                kind="company_missing",
+                competitors=[{"name": "Ecolab", "rank": 1}],
+                status="analysed" if report else "new",
+                report_status="found" if report else None,
+                report=report,
+            )
+        )
+    await session.commit()
+
+
+def test_competitor_events_are_live_only_with_their_reports(api: Api) -> None:
+    ids = seeded(api)
+    api.with_session(lambda s: seed_competitors(s, ids))
+    (event,) = api.get("/api/companies/kemira/competitors/events").json()
+    assert event["question_code"] == "G01" and event["engine"] == "groq_web"
+    assert event["kind"] == "company_missing" and event["company_rank"] is None
+    assert event["competitors"] == [{"name": "Ecolab", "rank": 1}]
+    assert (event["status"], event["report_status"]) == ("analysed", "found")
+    assert event["report"] == "The cited article lists Ecolab only."
+    assert event["run_date"] == str(D2) and event["question_text"]
+
+
+def test_competitor_events_filter_by_engine_and_days(api: Api) -> None:
+    ids = seeded(api)
+    api.with_session(lambda s: seed_competitors(s, ids))
+    assert api.get("/api/companies/kemira/competitors/events?engine=rag").json() == []
+    assert len(api.get("/api/companies/kemira/competitors/events?engine=groq_web").json()) == 1
+    assert api.get("/api/companies/kemira/competitors/events?days=0").status_code == 422
+
+
+def test_competitor_summary_counts_the_answers_that_name_the_company(api: Api) -> None:
+    ids = seeded(api)
+    api.with_session(lambda s: seed_competitors(s, ids))
+    points = api.get("/api/companies/kemira/competitors/summary?days=7").json()
+    assert [(p["date"], p["engine"], p["n_answers"], p["n_mentioned"]) for p in points] == [
+        (str(D1), "groq_web", 1, 1),
+        (str(D2), "groq_web", 2, 1),  # the dev answer is not counted
+    ]
+
+
+@pytest.mark.parametrize("part", ["events", "summary"])
+def test_competitor_endpoints_are_public_and_404_for_unknown_companies(
+    api: Api, part: str
+) -> None:
+    seeded(api)
+    assert api.get(f"/api/companies/kemira/competitors/{part}").status_code == 200
+    assert api.get(f"/api/companies/nope/competitors/{part}").status_code == 404

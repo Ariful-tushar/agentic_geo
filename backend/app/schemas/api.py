@@ -202,6 +202,35 @@ class AlertOut(BaseModel):
     after_answer_id: uuid.UUID | None = None
 
 
+class CompetitorRef(BaseModel):
+    name: str
+    rank: int
+
+
+class CompetitorEventOut(BaseModel):
+    id: uuid.UUID
+    run_date: date
+    engine: str
+    question_code: str
+    question_text: str
+    kind: Literal["competitor_ahead", "company_missing"]
+    competitors: list[CompetitorRef]
+    company_rank: int | None = None
+    status: Literal["new", "analysed"]
+    report_status: Literal["found", "nothing_found"] | None = None
+    report: str | None = None
+    answer_id: uuid.UUID
+
+
+class CompetitorSummaryPoint(BaseModel):
+    """Per day and engine: the company is named in `n_mentioned` of `n_answers` generic answers."""
+
+    date: date
+    engine: str
+    n_answers: int
+    n_mentioned: int
+
+
 # ---- admin -----------------------------------------------------------------------------------
 
 

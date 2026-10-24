@@ -43,9 +43,8 @@ def test_the_default_order_is_ax_competitor_faq_alerts_report() -> None:
     assert names == ["ax", "competitor", "faq", "alerts", "report"]
 
 
-async def test_the_stubs_are_skipped_not_failed() -> None:
+async def test_the_faq_stub_is_skipped_not_failed() -> None:
     ctx = DailyContext("kemira", "dev", "manual")
-    assert (await daily.step_competitor(ctx)).status == "skipped"
     assert (await daily.step_faq(ctx)).status == "skipped"
 
 

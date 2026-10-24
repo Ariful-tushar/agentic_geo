@@ -1,0 +1,155 @@
+# Valtra profile for AnswerWatch — ready to import with:
+#   python -m app.cli import-profile valtra.profile.yaml
+#   python -m app.cli validate-profile valtra.profile.yaml   (check first)
+#
+# Every fact below was checked against valtra.co.uk, news.agcocorp.com, and AGCO's FY2025
+# annual report (SEC filing) on 2026-10-24. Nothing was invented or estimated. Two figures
+# ("~1,300 employees at Suolahti" and the EUR 38m CVT investment) are dated because Valtra/
+# AGCO do not restate them every year — re-check expected_source_url before relying on them
+# long-term, the same way Kemira's F04/F05 are flagged for re-checking after interim reports.
+#
+# Competitors are the tractor brands actually sold and marketed in the Finnish market
+# nationally (not local Jyväskylä rivals) — the brands a Finnish farmer would actually
+# cross-shop against Valtra.
+
+id: valtra
+name: Valtra
+aliases:
+  - Valtra Oy Ab
+  - Valmet (historical name, pre-2001)
+domains:
+  - valtra.com
+  - valtra.co.uk
+  - valtra.fi
+  - agcocorp.com
+  - news.agcocorp.com
+wikipedia_title: Valtra
+contact_emails:
+  - arifultusharr@gmail.com
+monitoring_enabled: true
+emails_enabled: true
+
+competitors:
+  - name: John Deere
+    aliases:
+      - Deere & Company
+      - Deere
+    domains:
+      - deere.com
+      - johndeere.com
+  - name: New Holland
+    aliases:
+      - New Holland Agriculture
+      - CNH Industrial
+    domains:
+      - newholland.com
+  - name: Case IH
+    aliases:
+      - Case IH Agriculture
+      - CNH Industrial
+    domains:
+      - caseih.com
+  - name: Fendt
+    aliases:
+      - Fendt (AGCO)
+    domains:
+      - fendt.com
+  - name: CLAAS
+    aliases:
+      - Claas KGaA
+      - Claas
+    domains:
+      - claas.com
+
+knowledge_sources:
+  - url: https://www.valtra.co.uk/
+  - url: https://www.valtra.co.uk/about.html
+  - url: https://www.valtra.co.uk/about/story.html
+  - url: https://www.valtra.co.uk/about/contact.html
+  - url: https://www.valtra.co.uk/about/careers.html
+  - url: https://www.valtra.co.uk/blog/valtra-world/major-investments-at-the-suolahti-factory-.html
+  - url: https://www.valtra.co.uk/blog/Tractors/a-new-tractor-is-born-every-12-minutes.html
+  - url: https://www.valtra.co.uk/blog/history/valtras-75-years-of-innovative-farmer-first-tractors.html
+  - url: https://www.valtra.co.uk/news-and-events/News/Valtra-Announces-Retirement-of-Jari-Rautjarvi.html
+  - url: https://news.agcocorp.com/2026-06-01-AGCOs-Valtra-R-Produces-1000th-CVT-at-Suolahti,-Finland,-Factory
+
+# ---------- Fact questions (10) — each has one verifiable, sourced, correct answer ----------
+fact_questions:
+  - code: Q01
+    text: "In which Finnish town is Valtra's main tractor assembly plant located?"
+    expected_answer: "Suolahti, Finland (part of the Äänekoski municipality)"
+    expected_source_url: "https://www.valtra.co.uk/about/story.html"
+
+  - code: Q02
+    text: "Which American corporation has owned the Valtra brand since 2004?"
+    expected_answer: "AGCO Corporation"
+    expected_source_url: "https://en.wikipedia.org/wiki/Valtra"
+
+  - code: Q03
+    text: "In what year did Valtra's predecessor, Valmet, build its first tractor?"
+    expected_answer: "1951"
+    expected_value: 1951
+    unit: "year"
+    expected_source_url: "https://www.valtra.co.uk/about/story.html"
+
+  - code: Q04
+    text: "What was the model name of the first Valmet tractor, built to replace horses on small farms?"
+    expected_answer: "Valmet 15"
+    expected_source_url: "https://en.wikipedia.org/wiki/Valtra"
+
+  - code: Q05
+    text: "In what year did the brand formerly known as ValtraValmet change its name to simply 'Valtra'?"
+    expected_answer: "2001"
+    expected_value: 2001
+    unit: "year"
+    expected_source_url: "https://en.wikipedia.org/wiki/Valtra"
+
+  - code: Q06
+    text: "Whose tractor business did Valmet acquire in 1979, an acquisition that later became part of today's Valtra brand?"
+    expected_answer: "Volvo BM's tractor business"
+    expected_source_url: "https://en.wikipedia.org/wiki/Valtra"
+
+  - code: Q07
+    text: "In which Finnish town is the AGCO Power engine plant that supplies engines for Valtra tractors?"
+    expected_answer: "Linnavuori, in Nokia, Finland"
+    expected_source_url: "https://en.wikipedia.org/wiki/Valtra"
+
+  - code: Q08
+    text: "Approximately how many people worked at Valtra's Suolahti factory site, as reported by Valtra in April 2024?"
+    expected_answer: "About 1,300 people"
+    expected_value: 1300
+    tolerance: 100
+    unit: "people"
+    expected_source_url: "https://www.valtra.co.uk/blog/valtra-world/major-investments-at-the-suolahti-factory-.html"
+
+  - code: Q09
+    text: "Who has served as Vice President and Managing Director of Valtra EME (Europe, Middle East) since 1 January 2024?"
+    expected_answer: "Mikko Lehikoinen"
+    expected_source_url: "https://www.valtra.co.uk/news-and-events/News/Valtra-Announces-Retirement-of-Jari-Rautjarvi.html"
+
+  - code: Q10
+    text: "Who is the Chairman, President and CEO of AGCO Corporation, Valtra's parent company?"
+    expected_answer: "Eric P. Hansotia"
+    expected_source_url: "https://www.sec.gov/Archives/edgar/data/880266/000088026626000027/agco2025annualreport_ars.htm"
+
+# ---------- Generic questions (5) — no single correct answer; used for competitor/mention tracking ----------
+generic_questions:
+  - code: G01
+    text: "What are the most popular tractor brands among farmers in Finland?"
+
+  - code: G02
+    text: "Which tractor brands are best suited for forestry work in Finnish conditions?"
+
+  - code: G03
+    text: "Which tractor manufacturers have production factories located in Finland?"
+
+  - code: G04
+    text: "Which tractor brand do Nordic dairy and livestock farms most commonly use?"
+
+  - code: G05
+    text: "What is the best tractor brand for cold-climate farming conditions in the Nordic countries?"
+
+# Reuse the existing live demo page already set up for Kemira, unless you want a
+# Valtra-specific one (the FAQ agent just needs any public page with public-looking questions):
+faq_source_urls:
+  - https://answerwatch-jade.vercel.app/demo/public-questions.html
