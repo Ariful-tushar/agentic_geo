@@ -33,7 +33,7 @@ export function WakingBanner() {
   return (
     <div
       role="status"
-      className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900"
+      className="border-b border-amber-400/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-200"
     >
       Waking up the demo server, about 1 minute on the free tier.
     </div>

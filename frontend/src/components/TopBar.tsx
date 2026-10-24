@@ -73,8 +73,8 @@ export function TopBar() {
   const items = companies.map((c) => ({ value: c.id, label: c.name }))
 
   return (
-    <header className="sticky top-0 z-20 border-b bg-background">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2">
+    <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-xl">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
         <Button
           variant="ghost"
           size="icon"
@@ -94,7 +94,7 @@ export function TopBar() {
           onValueChange={(value) => value && setCompanyId(value)}
           disabled={items.length === 0}
         >
-          <SelectTrigger className="min-w-36" aria-label="Company">
+          <SelectTrigger className="min-w-36 border-border bg-card shadow-sm" aria-label="Company">
             <SelectValue placeholder="Company" />
           </SelectTrigger>
           <SelectContent>
@@ -110,24 +110,24 @@ export function TopBar() {
           {isAdmin && companyId && <MonitoringSwitch companyId={companyId} />}
           {isAdmin && companyId && <RunNowButton companyId={companyId} />}
           {isAdmin ? (
-            <Button variant="outline" size="sm" onClick={logout}>
+            <Button variant="outline" size="sm" onClick={logout} className="border-border bg-card text-foreground hover:bg-muted">
               <LogOut />
               <span className="hidden sm:inline">Log out</span>
             </Button>
           ) : (
-            <Button variant="outline" size="sm" onClick={openLogin}>
+            <Button size="sm" onClick={openLogin}>
               <Lock />
               <span className="hidden sm:inline">Admin login</span>
             </Button>
           )}
         </div>
       </div>
-      <p className="border-t bg-muted/50 px-4 py-1 text-xs text-muted-foreground">
+      <p className="border-t border-border bg-muted/50 px-4 py-1 text-xs text-muted-foreground">
         Independent demo, not affiliated with the selected company.
       </p>
 
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side="left" className="w-64">
+        <SheetContent side="left" className="w-64 border-sidebar-border bg-sidebar text-sidebar-foreground">
           <SheetHeader>
             <SheetTitle>
               <Brand />

@@ -65,22 +65,29 @@ export function TrendChart({ points, engines, days }: Props) {
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="date"
             tickFormatter={shortDate}
             minTickGap={16}
-            tick={{ fontSize: 12 }}
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
           />
           <YAxis
             domain={[0, 1]}
             ticks={[0, 0.25, 0.5, 0.75, 1]}
             tickFormatter={percent}
-            tick={{ fontSize: 12 }}
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
           />
           <Tooltip
             labelFormatter={(label) => shortDate(String(label))}
             formatter={(value, name) => [percent(Number(value)), labels[String(name)] ?? name]}
+            contentStyle={{
+              backgroundColor: 'var(--popover)',
+              borderColor: 'var(--border)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--popover-foreground)',
+            }}
+            labelStyle={{ color: 'var(--popover-foreground)' }}
           />
           {simulatedDays.length > 0 && (
             <ReferenceArea
@@ -92,7 +99,10 @@ export function TrendChart({ points, engines, days }: Props) {
               ifOverflow="visible"
             />
           )}
-          <Legend formatter={(value) => labels[String(value)] ?? value} />
+          <Legend
+            formatter={(value) => labels[String(value)] ?? value}
+            wrapperStyle={{ color: 'var(--muted-foreground)', fontSize: 12 }}
+          />
           {engineIds.map((id, index) => (
             <Line
               key={id}
@@ -112,7 +122,7 @@ export function TrendChart({ points, engines, days }: Props) {
                     cx={cx}
                     cy={cy}
                     r={4}
-                    fill={simulated ? '#ffffff' : color}
+                    fill={simulated ? 'var(--card)' : color}
                     stroke={color}
                     strokeWidth={simulated ? 2 : 0}
                   />
@@ -128,7 +138,7 @@ export function TrendChart({ points, engines, days }: Props) {
     </div>
     {simulatedDays.length > 0 && (
       <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-        <span aria-hidden className="inline-block h-3 w-5 rounded-sm bg-gray-400/30" />
+        <span aria-hidden className="inline-block h-3 w-5 rounded-sm bg-muted/50" />
         Simulated history (demo), real monitoring since{' '}
         {firstReal ? longDate(firstReal) : '22 Oct 2026'}
       </p>

@@ -6,9 +6,9 @@ export interface VerdictStyle {
 }
 
 const STYLES: Record<string, VerdictStyle> = {
-  correct: { label: 'Correct', symbol: '1', className: 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200' },
-  partial: { label: 'Partly correct', symbol: '½', className: 'bg-amber-100 text-amber-900 hover:bg-amber-200' },
-  wrong: { label: 'Wrong', symbol: '0', className: 'bg-red-100 text-red-900 hover:bg-red-200' },
+  correct: { label: 'Correct', symbol: '1', className: 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25' },
+  partial: { label: 'Partly correct', symbol: '½', className: 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25' },
+  wrong: { label: 'Wrong', symbol: '0', className: 'bg-red-500/15 text-red-300 hover:bg-red-500/25' },
   no_answer: { label: 'No answer', symbol: '–', className: 'bg-muted text-muted-foreground hover:bg-muted/70' },
 }
 

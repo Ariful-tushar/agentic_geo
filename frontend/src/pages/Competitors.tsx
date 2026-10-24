@@ -63,13 +63,18 @@ function MentionChart({
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={16} tick={{ fontSize: 12 }} />
+          <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="date"
+            tickFormatter={shortDate}
+            minTickGap={16}
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+          />
           <YAxis
             domain={[0, 1]}
             ticks={[0, 0.25, 0.5, 0.75, 1]}
             tickFormatter={percent}
-            tick={{ fontSize: 12 }}
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
           />
           <Tooltip
             labelFormatter={(label) => shortDate(String(label))}
@@ -77,8 +82,18 @@ function MentionChart({
               `${percent(Number(value))} (${item.payload[`${String(name)}:counts`]})`,
               labels[String(name)] ?? name,
             ]}
+            contentStyle={{
+              backgroundColor: 'var(--popover)',
+              borderColor: 'var(--border)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--popover-foreground)',
+            }}
+            labelStyle={{ color: 'var(--popover-foreground)' }}
           />
-          <Legend formatter={(value) => labels[String(value)] ?? value} />
+          <Legend
+            formatter={(value) => labels[String(value)] ?? value}
+            wrapperStyle={{ color: 'var(--muted-foreground)', fontSize: 12 }}
+          />
           {shown.map((e, index) => (
             <Line
               key={e.id}

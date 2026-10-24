@@ -16,7 +16,7 @@ function DeltaText({ delta }: { delta: number | null }) {
   const points = Math.round(delta * 100)
   if (points === 0) return <span className="text-muted-foreground">no change</span>
   return (
-    <span className={points > 0 ? 'text-emerald-700' : 'text-red-700'}>
+    <span className={points > 0 ? 'text-emerald-300' : 'text-red-300'}>
       {points > 0 ? '+' : ''}
       {points} pts vs previous day
     </span>

@@ -101,7 +101,7 @@ function Body({ answer }: { answer: AnswerDetail }) {
               <blockquote className="border-l-2 pl-3 italic text-muted-foreground">
                 "{score.quote}"
                 {!score.quote_verified && (
-                  <span className="ml-2 inline-flex items-center gap-1 not-italic text-amber-700">
+                  <span className="ml-2 inline-flex items-center gap-1 not-italic text-amber-300">
                     <AlertTriangle className="size-3.5" />
                     quote not found word for word in the answer
                   </span>

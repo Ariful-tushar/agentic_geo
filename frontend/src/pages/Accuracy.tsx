@@ -18,9 +18,9 @@ const SIMULATED_CLASS =
 
 function Legend() {
   const items = [
-    ['bg-emerald-100 text-emerald-900', '1', 'correct'],
-    ['bg-amber-100 text-amber-900', '½', 'partly correct'],
-    ['bg-red-100 text-red-900', '0', 'wrong'],
+    ['bg-emerald-500/15 text-emerald-300', '1', 'correct'],
+    ['bg-amber-500/15 text-amber-300', '½', 'partly correct'],
+    ['bg-red-500/15 text-red-300', '0', 'wrong'],
     ['bg-muted text-muted-foreground', '–', 'no answer, error or not scored'],
     [SIMULATED_CLASS, 'sim', 'simulated, no answers stored'],
   ]
