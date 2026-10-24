@@ -6,6 +6,8 @@ import type {
   AnswerDetail,
   CompanyDetail,
   CompanyListItem,
+  CompetitorEventOut,
+  CompetitorSummaryPoint,
   DetailsOut,
   EmailLogOut,
   EngineOut,
@@ -47,6 +49,20 @@ export const useToday = (id: string | null) =>
   useQuery({
     queryKey: ['today', id],
     queryFn: () => api.get<TodayItem[]>(`/api/companies/${id}/accuracy/today`),
+    enabled: id !== null,
+  })
+
+export const useCompetitorEvents = (id: string | null, days = 30) =>
+  useQuery({
+    queryKey: ['competitor-events', id, days],
+    queryFn: () => api.get<CompetitorEventOut[]>(`/api/companies/${id}/competitors/events?days=${days}`),
+    enabled: id !== null,
+  })
+
+export const useCompetitorSummary = (id: string | null, days = 14) =>
+  useQuery({
+    queryKey: ['competitor-summary', id, days],
+    queryFn: () => api.get<CompetitorSummaryPoint[]>(`/api/companies/${id}/competitors/summary?days=${days}`),
     enabled: id !== null,
   })
 

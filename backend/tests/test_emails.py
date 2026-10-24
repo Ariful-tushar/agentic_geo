@@ -226,6 +226,40 @@ def test_rendered_report_has_text_and_html(db: DbCall, monkeypatch: pytest.Monke
     assert mail.html.startswith("<!doctype html>") and "<script" not in mail.html
 
 
+def test_report_email_shows_the_competitor_reports(
+    db: DbCall, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.db.models import CompetitorEvent
+
+    ids = db(seed_world)
+    db(lambda s: set_contacts(s, RECIPIENTS))
+
+    async def add_event(session: AsyncSession) -> None:
+        session.add(
+            CompetitorEvent(
+                company_id="kemira",
+                run_date=D2,
+                answer_id=ids["a2"],
+                question_id=ids["q"]["Q01"],
+                engine="groq_web",
+                kind="company_missing",
+                competitors=[{"name": "Ecolab", "rank": 1}],
+                status="analysed",
+                report_status="found",
+                report="The cited trade article lists Ecolab only.",
+            )
+        )
+        await session.commit()
+
+    db(add_event)
+    monkeypatch.setattr(report, "get_settings", lambda: smtp_settings())
+    data = db(collect)
+    assert data.events_count == 1
+    mail = report.render_report(data)
+    for text in (mail.text, mail.html):
+        assert "The cited trade article lists Ecolab only." in text
+
+
 def test_text_from_the_data_is_escaped_in_html(db: DbCall) -> None:
     data = report.ReportData("A <b>Co</b>", D2, "live", "https://x.example.org")
     data.notes = ["<script>alert(1)</script>"]

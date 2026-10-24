@@ -56,3 +56,28 @@ const OWNER_LABELS: Record<string, string> = {
 export function ownerLabel(owner: string): string {
   return OWNER_LABELS[owner] ?? owner
 }
+
+const ALERT_LABELS: Record<string, string> = {
+  score_drop: 'Score dropped',
+  score_improved: 'Score improved',
+  company_dropped: 'Company dropped out of the answer',
+  competitor_overtook: 'Competitor overtook the company',
+}
+
+export function alertLabel(kind: string): string {
+  return ALERT_LABELS[kind] ?? kind
+}
+
+/** The "who was ahead" text of a competitor event. */
+export function eventHeadline(
+  kind: string,
+  competitors: { name: string; rank: number }[],
+  companyRank: number | null,
+): string {
+  if (kind === 'company_missing') {
+    const names = competitors.map((c) => c.name).join(', ')
+    return names ? `Company not mentioned (named: ${names})` : 'Company not mentioned'
+  }
+  const ahead = competitors.filter((c) => companyRank === null || c.rank < companyRank)
+  return `Ahead of the company: ${ahead.map((c) => c.name).join(', ') || 'a competitor'}`
+}

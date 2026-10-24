@@ -105,6 +105,33 @@ export interface AlertOut {
   after_answer_id: string | null
 }
 
+export interface CompetitorRef {
+  name: string
+  rank: number
+}
+
+export interface CompetitorEventOut {
+  id: string
+  run_date: string
+  engine: string
+  question_code: string
+  question_text: string
+  kind: 'competitor_ahead' | 'company_missing'
+  competitors: CompetitorRef[]
+  company_rank: number | null
+  status: 'new' | 'analysed'
+  report_status: 'found' | 'nothing_found' | null
+  report: string | null
+  answer_id: string
+}
+
+export interface CompetitorSummaryPoint {
+  date: string
+  engine: string
+  n_answers: number
+  n_mentioned: number
+}
+
 export interface Health {
   status: string
   db: boolean
